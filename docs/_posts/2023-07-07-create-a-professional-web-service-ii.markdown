@@ -152,10 +152,3 @@ logger.debug('This is a debug log');
 ```
 
 To test this changes start the service in development mode `npm start` and then in production mode `NODE_ENV=production npm start`
-
-
-
-
-- Documented APIs
-- HATEOAS
-- Return consistent errors
