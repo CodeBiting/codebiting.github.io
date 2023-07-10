@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Create a professional web service - Part I"
+title:  "Create a professional web service - Part I - Server skeleton"
 date:   2023-07-06 09:58:12 +0200
 categories: development
 ---

@@ -1,0 +1,164 @@
+---
+layout: post
+title:  "Create a professional web service - Part III - Documentation"
+date:   2023-07-10 17:48:24 +0200
+categories: development
+---
+Learn how to build a profesional web service with JavaScript, NodeJS and Express.
+
+## Document the API
+
+When creating a web service, it is necessary to provide instructions on how to use the various APIs to the intended audience, whether it's our development team (as after several weeks, no one may remember what the APIs do or how to call them) or third parties.
+
+For this purpose, we can use various tools such as [Postman](https://www.postman.com/asp), [Apigee](https://docs.apigee.com/), etc. However, for our service, we will use [Swagger](https://github.com/swagger-api) as it easily integrates with Express and allows us to:
+
+- Generate easily understandable and well-structured documentation that is seamlessly integrated with the code.
+- Follow the [OpenAPI](https://swagger.io/specification/) standard.
+- Provide ease in exploring APIs, testing parameters, and responses, which speeds up client software development.
+
+To add swagger to our project we will use:
+
+- [swagger-ui-express](https://www.npmjs.com/package/swagger-ui-express): It serves auto-generated Swagger documentation for Express projects.
+- [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc): It reads JSDoc annotations in the source code and generates the OpenAPI specification.
+
+First of all, install dependecines
+
+```javascript
+npm install swagger-ui-express --save
+npm install swagger-jsdoc --save
+```
+
+Create the API documentation controller `./routes/v1/api-docs.js` with API definitions and routes to the controllers that need to be documented.
+
+For example the `./routes/v1/api-docs.js` can be:
+
+```javascript
+'use strict';
+
+const express = require('express');
+const app = express();
+
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUI = require('swagger-ui-express');
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      version: '1.0.0',
+      title: 'Cargo Loading API',
+      description: "This is an example of cargo loading software",
+      contact: {
+        name: "API Support",
+        url: "https://www.codebiting.com/support",
+      },
+      license: {
+        name: "MIT",
+        url: "https://opensource.org/license/mit/"
+      },
+      servers: ['http://localhost:8080']
+    }
+  },
+  // APIs to document
+  apis: [
+    './routes/v1/healthcheck.js',
+  ]
+}
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+module.exports = app;
+```
+
+Add comments in the [apidoc](https://apidocjs.com/) format in the controllers being created so that Swagger can automatically generate the documentation.
+
+For example the file `./routes/v1/healthcheck.js` can be:
+
+```javascript
+var express = require('express');
+var router = express.Router();
+
+const logger = require(`${__base}api/logger`);
+const ApiResult = require(`${__base}api/ApiResult`);
+const ApiError = require(`${__base}api/ApiError`);
+const containerService = require(`${__base}api/v1/containerService`);
+
+const HELP_BASE_URL = '/help/error';
+const API_NAME = 'container';
+
+/**
+ * @swagger
+ *   definitions:
+ *     Healthcheck:
+ *       type: object
+ *       properties:
+ *         number:
+ *           type: integer
+ *         code:
+ *           type: string
+ *         description:
+ *           type: string,
+ *       required: ['number', 'code']
+ */
+
+/**
+ * @swagger
+ * /v1/healthcheck:
+ *   get:
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: ApiResult object with all healthchecks performed in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
+router.get('/', function (req, res, next) {
+  let errors = [];
+  let status = 200;
+  let container = null;
+  try {
+    container = containerService.getContainer(1);
+  } catch (ex) {
+    logger.error(
+      `${API_NAME}: [${req.method}] ${req.originalUrl}: reqId=${req.requestId} : ${ex}`
+    );
+    status = 500;
+    errors.push(
+      new ApiError(
+        'CONTAINER-001',
+        'Internal server error',
+        'Server has an internal error with the request',
+        `${req.protocol}://${req.get('host')}${HELP_BASE_URL}/CONTAINER-001`
+      )
+    );
+  }
+
+  res
+    .status(status)
+    .json(
+      new ApiResult(
+        status === 200 ? 'OK' : 'ERROR',
+        container,
+        req.requestId,
+        errors
+      )
+    );
+});
+
+module.exports = router;
+```
+
+Add the documentation route to `app.js`:
+
+```javascript
+const apiDocsV1 = require('./routes/v1/api-docs');
+
+app.use('/v1/api-docs', apiDocsV1);
+```
+
+Start the service and visit the page `http://localhost:8080/v1/api-docs/` to see the documentation generated by Swagger.

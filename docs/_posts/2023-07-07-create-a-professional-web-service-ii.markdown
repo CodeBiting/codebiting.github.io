@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Create a professional web service - Part II"
+title:  "Create a professional web service - Part II - Logging"
 date:   2023-07-07 07:55:56 +0200
 categories: development
 ---
