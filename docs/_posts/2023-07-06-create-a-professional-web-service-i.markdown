@@ -1,12 +1,14 @@
 ---
 layout: post
-title:  "Create a professional web service - Part I"
+title:  "Create a professional web service - Part I - Server skeleton"
 date:   2023-07-06 09:58:12 +0200
 categories: development
 ---
 Learn how to build a profesional web service with JavaScript, NodeJS and Express.
 
-First of all install NodeJS, npm and Express. There are several methos of installation and multiple tutorials that explain, in this case we will install node version manager over a Ubuntu 22.04LTS:
+## Build a simple web server
+
+To build a professional web service with JavaScript, Node.js, and Express, you need to follow a series of steps. Let's start with installing Node.js, npm, and Express on Ubuntu 22.04 LTS. Here's a corrected version of the instructions:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
@@ -21,7 +23,7 @@ node -v
 npm -v
 ```
 
-First we will make a very simple web service with node:
+First, we will create a very simple web service that listens for requests and responds with a message. All the development will be done using Node.js.
 
 ```javascript
 const http = require("http");
@@ -42,19 +44,21 @@ server.listen(port, host, () => {
 });
 ```
 
-Some important things about this web server are:
+Some important points about this web server are:
 
-- All the requests received are handled by the `requestListener` function, there are no routes defined, there are no html 404 errors. If we want this we need to program inside the server.
-- The response is sent by the function `res.end()`, we don't have any view template or html pages.
+- All the received requests are handled by the requestListener function. There are no defined routes or HTML 404 errors. If we want these features, we need to program them within the server.
+- The response is sent using the res.end() function. There are no views or HTML pages available.
 
-Now lets use a web framework to avoid implement routing and templating. There are several frameworks, but we will use Express because is fast, minimialits, extensible and widely used. To install Express:
+## Build a web server with Express
+
+Now, let's utilize a web framework to avoid implementing routing and templating from scratch. There are several frameworks available, but we will use Express because it is fast, minimalist, extensible, and widely used. To install Express:
 
 ```bash
 npm install express -g
 npm install -g express-generator
 ```
 
-To generate the project:
+To generate the project type:
 
 ```bash
 express --view=pug MyFirstProject
@@ -96,15 +100,15 @@ npm install
 npm start
 ```
 
-With this we have a project with routing, and templates with pug. [Pug](https://github.com/pugjs/pug) is a template engine that simplifies the readabilty of the templates code. But you can choose any other template engine integrated with Express [Express template engines](https://expressjs.com/en/resources/template-engines.html).
+Now, we have a project with routing and templates using Pug. [Pug](https://github.com/pugjs/pug) is a template engine that simplifies the readability of the template code. However, you can choose any other template engine integrated with Express from the [Express template engines](https://expressjs.com/en/resources/template-engines.html).
 
-To begin to work with pug you can use this page <https://pug2html.com/>
+To start working with Pug, you can use the website <https://pug2html.com/>.
 
-Ok, we have the project build and running with Express but we need other features to have a professional service:
+Now that we have built and running the project with Express, let's discuss other features required for a professional service:
 
 - Logging
 - Documented APIs
 - HATEOAS
-- Return consistent errors
+- Consistent error handling
 
-We will see in the nexts posts
+We will cover these topics in the upcoming posts.

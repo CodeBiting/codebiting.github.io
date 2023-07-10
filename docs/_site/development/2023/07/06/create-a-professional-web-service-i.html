@@ -3,9 +3,9 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Create a professional web service - Part I | CodeBiting’s homepage</title>
+<title>Create a professional web service - Part I - Server skeleton | CodeBiting’s homepage</title>
 <meta name="generator" content="Jekyll v3.9.3" />
-<meta property="og:title" content="Create a professional web service - Part I" />
+<meta property="og:title" content="Create a professional web service - Part I - Server skeleton" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Learn how to build a profesional web service with JavaScript, NodeJS and Express." />
 <meta property="og:description" content="Learn how to build a profesional web service with JavaScript, NodeJS and Express." />
@@ -15,9 +15,9 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2023-07-06T09:58:12+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Create a professional web service - Part I" />
+<meta property="twitter:title" content="Create a professional web service - Part I - Server skeleton" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-06T09:58:12+02:00","datePublished":"2023-07-06T09:58:12+02:00","description":"Learn how to build a profesional web service with JavaScript, NodeJS and Express.","headline":"Create a professional web service - Part I","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"},"url":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-06T09:58:12+02:00","datePublished":"2023-07-06T09:58:12+02:00","description":"Learn how to build a profesional web service with JavaScript, NodeJS and Express.","headline":"Create a professional web service - Part I - Server skeleton","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"},"url":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting's homepage" /></head>
 <body><header class="site-header" role="banner">
@@ -40,7 +40,7 @@
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Create a professional web service - Part I</h1>
+    <h1 class="post-title p-name" itemprop="name headline">Create a professional web service - Part I - Server skeleton</h1>
     <p class="post-meta">
       <time class="dt-published" datetime="2023-07-06T09:58:12+02:00" itemprop="datePublished">Jul 6, 2023
       </time></p>
@@ -49,7 +49,9 @@
   <div class="post-content e-content" itemprop="articleBody">
     <p>Learn how to build a profesional web service with JavaScript, NodeJS and Express.</p>
 
-<p>First of all install NodeJS, npm and Express. There are several methos of installation and multiple tutorials that explain, in this case we will install node version manager over a Ubuntu 22.04LTS:</p>
+<h2 id="build-a-simple-web-server">Build a simple web server</h2>
+
+<p>To build a professional web service with JavaScript, Node.js, and Express, you need to follow a series of steps. Let’s start with installing Node.js, npm, and Express on Ubuntu 22.04 LTS. Here’s a corrected version of the instructions:</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-o-</span> https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 <span class="nb">export </span><span class="nv">NVM_DIR</span><span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/.nvm"</span>
@@ -63,7 +65,7 @@ node <span class="nt">-v</span>
 npm <span class="nt">-v</span>
 </code></pre></div></div>
 
-<p>First we will make a very simple web service with node:</p>
+<p>First, we will create a very simple web service that listens for requests and responds with a message. All the development will be done using Node.js.</p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">http</span><span class="dl">"</span><span class="p">);</span>
 
@@ -83,20 +85,22 @@ npm <span class="nt">-v</span>
 <span class="p">});</span>
 </code></pre></div></div>
 
-<p>Some important things about this web server are:</p>
+<p>Some important points about this web server are:</p>
 
 <ul>
-  <li>All the requests received are handled by the <code class="language-plaintext highlighter-rouge">requestListener</code> function, there are no routes defined, there are no html 404 errors. If we want this we need to program inside the server.</li>
-  <li>The response is sent by the function <code class="language-plaintext highlighter-rouge">res.end()</code>, we don’t have any view template or html pages.</li>
+  <li>All the received requests are handled by the requestListener function. There are no defined routes or HTML 404 errors. If we want these features, we need to program them within the server.</li>
+  <li>The response is sent using the res.end() function. There are no views or HTML pages available.</li>
 </ul>
 
-<p>Now lets use a web framework to avoid implement routing and templating. There are several frameworks, but we will use Express because is fast, minimialits, extensible and widely used. To install Express:</p>
+<h2 id="build-a-web-server-with-express">Build a web server with Express</h2>
+
+<p>Now, let’s utilize a web framework to avoid implementing routing and templating from scratch. There are several frameworks available, but we will use Express because it is fast, minimalist, extensible, and widely used. To install Express:</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install </span>express <span class="nt">-g</span>
 npm <span class="nb">install</span> <span class="nt">-g</span> express-generator
 </code></pre></div></div>
 
-<p>To generate the project:</p>
+<p>To generate the project type:</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>express <span class="nt">--view</span><span class="o">=</span>pug MyFirstProject
 
@@ -137,20 +141,20 @@ npm <span class="nb">install</span>
 npm start
 </code></pre></div></div>
 
-<p>With this we have a project with routing, and templates with pug. <a href="https://github.com/pugjs/pug">Pug</a> is a template engine that simplifies the readabilty of the templates code. But you can choose any other template engine integrated with Express <a href="https://expressjs.com/en/resources/template-engines.html">Express template engines</a>.</p>
+<p>Now, we have a project with routing and templates using Pug. <a href="https://github.com/pugjs/pug">Pug</a> is a template engine that simplifies the readability of the template code. However, you can choose any other template engine integrated with Express from the <a href="https://expressjs.com/en/resources/template-engines.html">Express template engines</a>.</p>
 
-<p>To begin to work with pug you can use this page <a href="https://pug2html.com/">https://pug2html.com/</a></p>
+<p>To start working with Pug, you can use the website <a href="https://pug2html.com/">https://pug2html.com/</a>.</p>
 
-<p>Ok, we have the project build and running with Express but we need other features to have a professional service:</p>
+<p>Now that we have built and running the project with Express, let’s discuss other features required for a professional service:</p>
 
 <ul>
   <li>Logging</li>
   <li>Documented APIs</li>
   <li>HATEOAS</li>
-  <li>Return consistent errors</li>
+  <li>Consistent error handling</li>
 </ul>
 
-<p>We will see in the nexts posts</p>
+<p>We will cover these topics in the upcoming posts.</p>
 
   </div><a class="u-url" href="/development/2023/07/06/create-a-professional-web-service-i.html" hidden></a>
 </article>

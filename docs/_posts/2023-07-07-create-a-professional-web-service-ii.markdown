@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Create a professional web service - Part II"
+title:  "Create a professional web service - Part II - Logging"
 date:   2023-07-07 07:55:56 +0200
 categories: development
 ---
@@ -8,12 +8,13 @@ Learn how to build a profesional web service with JavaScript, NodeJS and Express
 
 ## Adding logging capabilities
 
-We want log to console all the errors and traces to monitor the service and detect malfunction.
-To do this we ned to use a logger that display messages readable by humans in development mode and messages readable by a logger agent that can ingest our logs and centralize and process to analize and generate alarms.
+We want to log all errors and traces to the console in order to monitor the service and detect malfunctions in both development and production modes.
 
-We can do this with [Winston](https://www.npmjs.com/package/express-winston) combined with [Morgan](https://www.npmjs.com/package/morgan), a package already installed in the base Express project.
+To achieve this, we need to use a logger that displays human-readable messages in development mode and messages that can be ingested by a logger agent for centralized processing, analysis, and generating alarms.
 
-So, we install Winston and configure to allow logging messages:
+We will do with [Winston](https://www.npmjs.com/package/express-winston) combined with [Morgan](https://www.npmjs.com/package/morgan), a package already installed in the base Express project.
+
+First, install Winston and configure it to enable logging messages:
 
 ```bash
 # From the project root folder
@@ -73,11 +74,11 @@ const productionFormat = format.combine(
 let logger;
 
 const transportsCustom = [
-  // Allow the use the console to print the messages => PM2 and Docker saves to file
+  // Use the console to print the messages => PM2 and Docker saves to file
   new transports.Console(),
-  // Allow to print all the error level messages inside the error.log file
+  // Print all the error level messages inside the error.log file
   //new transports.File({ filename: 'logs/error.log', level: 'error' }),
-  // Allow to print all the error message inside the all.log file
+  // Print all the error message inside the all.log file
   // (also the error log that are also printed inside the error.log(
   //new transports.File({ filename: 'logs/all.log' }),
 ] 
@@ -94,7 +95,7 @@ if (process.env.NODE_ENV !== "production") {
   logger = createLogger({
     level: level,
     format: productionFormat,
-    // En entorn de producció indiquem el servei i el client
+    // Set the client and service name to easily identify the logs
     defaultMeta: {
       service: config.service,
       client: config.client,
@@ -137,10 +138,10 @@ app.use(
 );
 ```
 
-Finally, to test our new logger we need to add som logs in the code, for example, in the `./ap.js` file we can add some logs:
+Finally, to test our new logger we need to add som logs into the code, for example, in the `./app.js` file add:
 
 ```javascript
-// Add this comnstant at the beginning of the file
+// Add this constant at the begining of the file
 const logger = require("../api/logger");
 
 // Add this logs at the end of the file
