@@ -32,10 +32,26 @@ const host = 'localhost';
 const port = 8000;
 
 const requestListener = function (req, res) {
-  console.log(`Received request with body data ${JSON.strifigy(req.body)}`);
-  res.setHeader("Content-Type", "application/json");
-  res.writeHead(200);
-  res.end(`{"message": "This is a JSON response"}`);
+  const { headers, method, url } = req;
+  let body = [];
+  req.on('error', (err) => {
+    console.error(err);
+
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(500);
+    res.end(`{"message": "Internal server error ${err.message}"}`);
+  }).on('data', (chunk) => {
+    body.push(chunk);
+  }).on('end', () => {
+    body = Buffer.concat(body).toString();
+    console.log(`Received request [${method}] ${url}`);
+    console.log(`Received request with headers`, headers);
+    console.log(`Received request with body data`, body);
+
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(200);
+    res.end(`{"message": "This is a JSON response"}`);
+  });
 };
 
 const server = http.createServer(requestListener);
