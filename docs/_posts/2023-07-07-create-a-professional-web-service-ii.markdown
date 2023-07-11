@@ -111,7 +111,16 @@ Update the the file `/app.js`:
 1. Change `var logger = require('morgan');` for `var morgan = require('morgan');`
 2. Add `const logger = require("./api/logger");`
 3. Delete `app.use(logger('dev'));`
-4. Add:
+4. Add after `var app = express();` and install body-parser if needed `npm install body-parser --save`:
+
+```javascript
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+// parse application/json
+app.use(bodyParser.json());
+```
+
+5. Add before routes in `app.js`:
 
 ```javascript
 const morganFormat = process.env.NODE_ENV !== "production" ? "dev" : "combined";
@@ -120,16 +129,6 @@ app.use(
   morgan(morganFormat, {
     skip: function(req, res) {
       return res.statusCode < 400;
-    },
-    stream: {
-      write: (message) => logger.http(message.trim()),
-    },
-  })
-);
-app.use(
-  morgan(morganFormat, {
-    skip: function(req, res) {
-      return res.statusCode >= 400;
     },
     stream: {
       write: (message) => logger.http(message.trim()),
