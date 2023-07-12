@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>MySQL Deadlocks Analysis - Part I - Documentation | CodeBiting’s homepage</title>
+<meta name="generator" content="Jekyll v3.9.3" />
+<meta property="og:title" content="MySQL Deadlocks Analysis - Part I - Documentation" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Learn how deadlocks works in ." />
+<meta property="og:description" content="Learn how deadlocks works in ." />
+<link rel="canonical" href="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html" />
+<meta property="og:url" content="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html" />
+<meta property="og:site_name" content="CodeBiting’s homepage" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-12T13:35:24+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="MySQL Deadlocks Analysis - Part I - Documentation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-12T13:35:24+02:00","datePublished":"2023-07-12T13:35:24+02:00","description":"Learn how deadlocks works in .","headline":"MySQL Deadlocks Analysis - Part I - Documentation","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html"},"url":"http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting&apos;s homepage" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">CodeBiting&#39;s homepage</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">MySQL Deadlocks Analysis - Part I - Documentation</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-07-12T13:35:24+02:00" itemprop="datePublished">Jul 12, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Learn how deadlocks works in .</p>
+
+<h2 id="isolation">Isolation</h2>
+
+<p>In <a href="https://en.wikipedia.org/wiki/Database" title="Database">database</a> systems, <strong>isolation</strong> determines how <a href="https://en.wikipedia.org/wiki/Database_transaction" title="Database transaction">transaction</a> integrity is visible to other users and systems.</p>
+
+<p>A lower isolation level increases the ability of many users to access the same data at the same time, but increases the number of <a href="https://en.wikipedia.org/wiki/Concurrency_(computer_science)" title="Concurrency (computer science)">concurrency</a> effects (such as <a href="https://en.wikipedia.org/wiki/Write%E2%80%93read_conflict" title="Write–read conflict">dirty reads</a> or lost updates) users might encounter. Conversely, a higher isolation level reduces the types of concurrency effects that users may encounter, but requires more system resources and increases the chances that one transaction will block another.</p>
+
+<ol>
+  <li>
+    <p><strong>Dirty reads</strong>:
+    A <em>dirty read</em> (aka <em>uncommitted dependency</em>) occurs when a transaction retrieves a row that has been updated by another transaction that is not yet committed.</p>
+  </li>
+  <li>
+    <p><strong>Non-repeatable reads</strong>
+    A <em>non-repeatable read</em> occurs when a transaction retrieves a row twice and that row is updated by another transaction that is committed in between.</p>
+  </li>
+  <li>
+    <p><strong>Phantom reads</strong>
+    A <em>phantom read</em> occurs when a transaction retrieves a set of rows twice and new rows are inserted into or removed from that set by another transaction that is committed in between.</p>
+  </li>
+</ol>
+
+<ul>
+  <li>
+    <p><strong>Intention Locks</strong>:</p>
+
+    <p><code class="language-plaintext highlighter-rouge">InnoDB</code> supports <em>multiple granularity locking</em> which permits coexistence of row locks and table locks. For example, a statement such as <a href="https://dev.mysql.com/doc/refman/8.0/en/lock-tables.html" title="13.3.6 LOCK TABLES and UNLOCK TABLES Statements"><code class="language-plaintext highlighter-rouge">LOCK TABLES ... WRITE</code></a> takes an exclusive lock (an <code class="language-plaintext highlighter-rouge">X</code> lock) on the specified table. To make locking at multiple granularity levels practical, <code class="language-plaintext highlighter-rouge">InnoDB</code> uses <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_intention_lock" title="intention lock">intention locks</a>. Intention locks are table-level locks that indicate which type of lock (shared or exclusive) a transaction requires later for a row in a table. There are two types of intention locks:</p>
+
+    <ul>
+      <li>
+        <p>An <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_intention_shared_lock" title="intention shared lock">intention shared lock</a> (<code class="language-plaintext highlighter-rouge">IS</code>) indicates that a transaction intends to set a <em>shared</em> lock on individual rows in a table.</p>
+      </li>
+      <li>
+        <p>An <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_intention_exclusive_lock" title="intention exclusive lock">intention exclusive lock</a> (<code class="language-plaintext highlighter-rouge">IX</code>) indicates that a transaction intends to set an exclusive lock on individual rows in a table.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="innodb">InnoDB</h2>
+
+<p>InnoDB offers all four transaction isolation levels described by the SQL:1992 standard: <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_read-uncommitted"><code class="language-plaintext highlighter-rouge">READ UNCOMMITTED</code></a>, <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_read-committed"><code class="language-plaintext highlighter-rouge">READ COMMITTED</code></a>, <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="language-plaintext highlighter-rouge">REPEATABLE READ</code></a>, and <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_serializable"><code class="language-plaintext highlighter-rouge">SERIALIZABLE</code></a>. The default isolation level for <code class="language-plaintext highlighter-rouge">InnoDB</code> is <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_repeatable-read"><code class="language-plaintext highlighter-rouge">REPEATABLE READ</code></a>.</p>
+
+<ol>
+  <li>
+    <p><strong>READ UNCOMMITTED</strong>:
+<a href="https://dev.mysql.com/doc/refman/8.0/en/select.html" title="13.2.13 SELECT Statement">SELECT</a> statements are performed in a nonlocking fashion, but a possible earlier version of a row might be used. Thus, using this isolation level, such reads are not consistent. This is also called a <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_dirty_read" title="dirty read">dirty read</a>. Otherwise, this isolation level works like <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_read-committed"><code class="language-plaintext highlighter-rouge">READ COMMITTED</code></a>.</p>
+  </li>
+  <li>
+    <p><strong>READ COMMITED</strong>:
+A transaction can only read committed data. It ensures that any data read by a transaction has been committed by another transaction. However, it still allows non-repeatable reads and can result in phantom reads.</p>
+  </li>
+  <li>
+    <p><strong>REPEATABLE READ</strong>:
+This isolation level guarantees that if a transaction reads a set of data multiple times, it will always see the same data. It prevents non-repeatable reads, but phantom reads can still occur. In this level, any data read by a transaction is locked until the transaction completes.</p>
+  </li>
+  <li>
+    <p><strong>SERIALIZABLE</strong>:
+It provides strict transaction isolation, ensuring that multiple transactions executing concurrently will have the same effect as if they were executed sequentially. Serializable isolation eliminates all concurrency-related anomalies such as dirty reads, non-repeatable reads, and phantom reads. It achieves this by applying strict locking and ensuring that no other transactions can modify the data until the current transaction completes.</p>
+  </li>
+</ol>
+
+<p>How to <strong>SET TRANSACTION</strong> statement:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>```sql
+SET [GLOBAL | SESSION] TRANSACTION
+transaction_characteristic [, transaction_characteristic] ...
+
+transaction_characteristic: {
+ISOLATION LEVEL level
+  | access_mode
+}
+
+level: {
+  REPEATABLE READ
+  | READ COMMITTED
+  | READ UNCOMMITTED
+  | SERIALIZABLE
+}
+
+access_mode: {
+  READ WRITE
+  | READ ONLY
+}
+```
+</code></pre></div></div>
+
+<ul>
+  <li>These statements provide control over use of <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_transaction" title="transaction">transactions</a>:
+    <ul>
+      <li>
+        <p><code class="language-plaintext highlighter-rouge">START TRANSACTION</code> or <code class="language-plaintext highlighter-rouge">BEGIN</code> start a new transaction (autocommit remains disabled until you end the transaction with <code class="language-plaintext highlighter-rouge">COMMIT</code> or <code class="language-plaintext highlighter-rouge">ROLLBACK</code>).</p>
+      </li>
+      <li>
+        <p><code class="language-plaintext highlighter-rouge">COMMIT</code> commits the current transaction, making its changes permanent.</p>
+      </li>
+      <li>
+        <p><code class="language-plaintext highlighter-rouge">ROLLBACK</code> rolls back the current transaction, canceling its changes.</p>
+      </li>
+      <li>
+        <p><code class="language-plaintext highlighter-rouge">SET autocommit</code> disables or enables the default autocommit mode for the current session.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Disabling autocommit mode by setting the <a href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_autocommit"><code class="language-plaintext highlighter-rouge">autocommit</code></a> variable to zero, changes to transaction-safe tables (such as those for <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html" title="Chapter 15 The InnoDB Storage Engine"><code class="language-plaintext highlighter-rouge">InnoDB</code></a> or <a href="https://dev.mysql.com/doc/refman/8.0/en/mysql-cluster.html" title="Chapter 23 MySQL NDB Cluster 8.0"><code class="language-plaintext highlighter-rouge">NDB</code></a>) are not made permanent immediately. You must use <a href="https://dev.mysql.com/doc/refman/8.0/en/commit.html" title="13.3.1 START TRANSACTION, COMMIT, and ROLLBACK Statements"><code class="language-plaintext highlighter-rouge">COMMIT</code></a> to store your changes to disk or <code class="language-plaintext highlighter-rouge">ROLLBACK</code> to ignore the changes.</p>
+  </li>
+  <li>Beginning a transaction causes any pending transaction to be committed, also causes table locks acquired with <a href="https://dev.mysql.com/doc/refman/8.0/en/lock-tables.html" title="13.3.6 LOCK TABLES and UNLOCK TABLES Statements"><code class="language-plaintext highlighter-rouge">LOCK TABLES</code></a> to be released, as though you had executed <a href="https://dev.mysql.com/doc/refman/8.0/en/lock-tables.html" title="13.3.6 LOCK TABLES and UNLOCK TABLES Statements"><code class="language-plaintext highlighter-rouge">UNLOCK TABLES</code></a>. Beginning a transaction does not release a global read lock acquired with <a href="https://dev.mysql.com/doc/refman/8.0/en/flush.html#flush-tables-with-read-lock"><code class="language-plaintext highlighter-rouge">FLUSH TABLES WITH READ LOCK</code></a>.</li>
+</ul>
+
+<h2 id="preventionssolutions-to-deadlock">Preventions/Solutions to Deadlock</h2>
+
+<ul>
+  <li>Create indexes for the columns that are used as filters in the SQL queries.</li>
+  <li>Break large batch inserts into smaller ones to shorten lock occupancy.</li>
+  <li>
+    <p>When multiple rows are updated in different transactions, make sure they are updated in the same order.</p>
+  </li>
+  <li>
+    <p>Our idea proposed to prevent deadlock:</p>
+
+    <ul>
+      <li>
+        <p>Container table exaple:</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">container</span> <span class="p">(</span>
+  <span class="n">id</span> <span class="nb">BIGINT</span> <span class="nb">UNSIGNED</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
+  <span class="n">clientId</span> <span class="nb">BIGINT</span> <span class="nb">UNSIGNED</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="n">code</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="c1">--Default Version 0</span>
+  <span class="k">version</span> <span class="nb">INT</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="n">description</span> <span class="nb">TEXT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="n">width</span> <span class="nb">INT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="k">length</span> <span class="nb">INT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="n">height</span> <span class="nb">INT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="n">maxWeight</span> <span class="nb">INT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+  <span class="k">UNIQUE</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">code</span><span class="p">),</span>
+<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">INNODB</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+      <li>
+        <p>Example data for the table:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>clientId</th>
+              <th>code</th>
+              <th>version</th>
+              <th>description</th>
+              <th>width</th>
+              <th>length</th>
+              <th>height</th>
+              <th>maxWeight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>1</td>
+              <td>CONT01</td>
+              <td>0</td>
+              <td>TEST</td>
+              <td>10</td>
+              <td>20</td>
+              <td>10</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>1</td>
+              <td>CONT02</td>
+              <td>0</td>
+              <td>TEST</td>
+              <td>10</td>
+              <td>20</td>
+              <td>10</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>2</td>
+              <td>CONT03</td>
+              <td>0</td>
+              <td>TEST</td>
+              <td>10</td>
+              <td>20</td>
+              <td>10</td>
+              <td>200</td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+      <li>
+        <p><strong>Client1</strong> access to the containers with <code class="language-plaintext highlighter-rouge">[get]/containers</code> and then updates one container:</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span> <span class="c1">-- CLIENT1 gets the containers data at the same time that CLIENT2.</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">container</span>
+<span class="k">WHERE</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+</code></pre></div>        </div>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">container</span> 
+<span class="k">SET</span> <span class="n">code</span><span class="o">=</span><span class="s1">'CONT01-A'</span><span class="p">,</span> <span class="k">version</span><span class="o">=</span><span class="k">version</span><span class="o">+</span><span class="mi">1</span> 
+<span class="k">WHERE</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span> <span class="k">AND</span> <span class="k">version</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="c1">-- Now the version will be 1</span>
+</code></pre></div>        </div>
+      </li>
+      <li>
+        <p><strong>Client2</strong> access to the containers with <code class="language-plaintext highlighter-rouge">[get]/containers</code> and then updates one container after the <strong>Client1</strong> updated the container:</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span> <span class="c1">-- CLIENT2 gets the containers data at the same time that CLIENT1.</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">container</span>
+<span class="k">WHERE</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+</code></pre></div>        </div>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span> <span class="c1">-- CLIENT2 has to wait till CLIENT1 updates the CONTAINER</span>
+<span class="k">UPDATE</span> <span class="n">container</span> 
+<span class="k">SET</span> <span class="n">code</span><span class="o">=</span><span class="s1">'CONT01-B'</span><span class="p">,</span> <span class="k">version</span><span class="o">=</span><span class="k">version</span><span class="o">+</span><span class="mi">1</span> 
+<span class="k">WHERE</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span> <span class="k">AND</span> <span class="k">version</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="c1">-- Now the version will be 2</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+  </div><a class="u-url" href="/development/2023/07/12/mysql-deadlocks-analysis-iv.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CodeBiting&#39;s homepage</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">CodeBiting&#39;s homepage</li><li><a class="u-email" href="mailto:info@codebiting.com">info@codebiting.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/CodeBiting"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">CodeBiting</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>As a web application development company here is a series of guides and developed applications.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

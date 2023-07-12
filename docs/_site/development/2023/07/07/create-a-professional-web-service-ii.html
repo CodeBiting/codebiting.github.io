@@ -19,7 +19,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-07T07:55:56+02:00","datePublished":"2023-07-07T07:55:56+02:00","description":"Learn how to build a profesional web service with JavaScript, NodeJS and Express.","headline":"Create a professional web service - Part II - Logging","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html"},"url":"http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting's homepage" /></head>
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting&apos;s homepage" /></head>
 <body><header class="site-header" role="banner">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">CodeBiting&#39;s homepage</a><nav class="site-nav">
@@ -152,7 +152,17 @@ npm <span class="nb">install </span>winston <span class="nt">--save</span>
   <li>Change <code class="language-plaintext highlighter-rouge">var logger = require('morgan');</code> for <code class="language-plaintext highlighter-rouge">var morgan = require('morgan');</code></li>
   <li>Add <code class="language-plaintext highlighter-rouge">const logger = require("./api/logger");</code></li>
   <li>Delete <code class="language-plaintext highlighter-rouge">app.use(logger('dev'));</code></li>
-  <li>Add:</li>
+  <li>Add after <code class="language-plaintext highlighter-rouge">var app = express();</code> and install body-parser if needed <code class="language-plaintext highlighter-rouge">npm install body-parser --save</code>:</li>
+</ol>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// parse application/x-www-form-urlencoded</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="na">extended</span><span class="p">:</span> <span class="kc">false</span> <span class="p">}));</span>
+<span class="c1">// parse application/json</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Add before routes in <code class="language-plaintext highlighter-rouge">app.js</code>:</li>
 </ol>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">morganFormat</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">!==</span> <span class="dl">"</span><span class="s2">production</span><span class="dl">"</span> <span class="p">?</span> <span class="dl">"</span><span class="s2">dev</span><span class="dl">"</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">combined</span><span class="dl">"</span><span class="p">;</span>
@@ -161,16 +171,6 @@ npm <span class="nb">install </span>winston <span class="nt">--save</span>
   <span class="nx">morgan</span><span class="p">(</span><span class="nx">morganFormat</span><span class="p">,</span> <span class="p">{</span>
     <span class="na">skip</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">&lt;</span> <span class="mi">400</span><span class="p">;</span>
-    <span class="p">},</span>
-    <span class="na">stream</span><span class="p">:</span> <span class="p">{</span>
-      <span class="na">write</span><span class="p">:</span> <span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">logger</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">trim</span><span class="p">()),</span>
-    <span class="p">},</span>
-  <span class="p">})</span>
-<span class="p">);</span>
-<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span>
-  <span class="nx">morgan</span><span class="p">(</span><span class="nx">morganFormat</span><span class="p">,</span> <span class="p">{</span>
-    <span class="na">skip</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">;</span>
     <span class="p">},</span>
     <span class="na">stream</span><span class="p">:</span> <span class="p">{</span>
       <span class="na">write</span><span class="p">:</span> <span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">logger</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">trim</span><span class="p">()),</span>
