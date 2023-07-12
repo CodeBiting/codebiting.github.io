@@ -19,7 +19,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-06T09:58:12+02:00","datePublished":"2023-07-06T09:58:12+02:00","description":"Learn how to build a profesional web service with JavaScript, NodeJS and Express.","headline":"Create a professional web service - Part I - Server skeleton","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"},"url":"http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting's homepage" /></head>
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting&apos;s homepage" /></head>
 <body><header class="site-header" role="banner">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">CodeBiting&#39;s homepage</a><nav class="site-nav">
@@ -73,10 +73,26 @@ npm <span class="nt">-v</span>
 <span class="kd">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">;</span>
 
 <span class="kd">const</span> <span class="nx">requestListener</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request with body data </span><span class="p">${</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">strifigy</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)}</span><span class="s2">`</span><span class="p">);</span>
-  <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">);</span>
-  <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
-  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "This is a JSON response"}`</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="p">{</span> <span class="nx">headers</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">url</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">req</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="nx">body</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="nx">req</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">error</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "Internal server error </span><span class="p">${</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span><span class="s2">"}`</span><span class="p">);</span>
+  <span class="p">}).</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">data</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">body</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chunk</span><span class="p">);</span>
+  <span class="p">}).</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">end</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">body</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">body</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request [</span><span class="p">${</span><span class="nx">method</span><span class="p">}</span><span class="s2">] </span><span class="p">${</span><span class="nx">url</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request with headers`</span><span class="p">,</span> <span class="nx">headers</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request with body data`</span><span class="p">,</span> <span class="nx">body</span><span class="p">);</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "This is a JSON response"}`</span><span class="p">);</span>
+  <span class="p">});</span>
 <span class="p">};</span>
 
 <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">requestListener</span><span class="p">);</span>
