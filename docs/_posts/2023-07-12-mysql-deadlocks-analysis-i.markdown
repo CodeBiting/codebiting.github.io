@@ -1,10 +1,14 @@
 ---
 layout: post
-title:  "MySQL Deadlocks Analysis - Part I - Documentation"
+title:  "MySQL Deadlocks Analysis - Part I - Isolation Levels"
+author: Marc Arcedo
 date:   2023-07-12 13:35:24 +0200
 categories: development
 ---
-Learn how deadlocks works in .
+
+When working with relational databases, deadlock issues are a common problem, especially when the application has not addressed these issues correctly from the beginning. In this post, we will try to provide a first understanding of how to address these problems and offer some techniques to minimize them.
+
+There are one concept that must be clear before we start: isolation
 
 ## Isolation
 
@@ -88,9 +92,9 @@ Learn how deadlocks works in .
 - Break large batch inserts into smaller ones to shorten lock occupancy.
 - When multiple rows are updated in different transactions, make sure they are updated in the same order.
 
-- Our idea proposed to prevent deadlock:
+Our idea proposed to prevent deadlock:
   
-  - Container table exaple:
+Container table example:
 
     ```sql
     CREATE TABLE container (
@@ -109,15 +113,17 @@ Learn how deadlocks works in .
     ) ENGINE=INNODB;
     ```
 
-  - Example data for the table:
+Example data for the table:
 
+    ```text
     | id | clientId | code | version | description | width | length | height | maxWeight |
     |----|----------|------|---------|-------------|-------|--------|--------|-----------|
     | 1 | 1 | CONT01 | 0 | TEST | 10 | 20 | 10 | 200 |
     | 2 | 1 | CONT02 | 0 | TEST | 10 | 20 | 10 | 200 |
     | 3 | 2 | CONT03 | 0 | TEST | 10 | 20 | 10 | 200 |
+    ```
 
-  - **Client1** access to the containers with `[get]/containers` and then updates one container:
+**Client1** access to the containers with `[get]/containers` and then updates one container:
 
     ```sql
     BEGIN; -- CLIENT1 gets the containers data at the same time that CLIENT2.
@@ -133,7 +139,7 @@ Learn how deadlocks works in .
     -- Now the version will be 1
     ```
 
-  - **Client2** access to the containers with `[get]/containers` and then updates one container after the **Client1** updated the container:
+**Client2** access to the containers with `[get]/containers` and then updates one container after the **Client1** updated the container:
 
     ```sql
     BEGIN; -- CLIENT2 gets the containers data at the same time that CLIENT1.

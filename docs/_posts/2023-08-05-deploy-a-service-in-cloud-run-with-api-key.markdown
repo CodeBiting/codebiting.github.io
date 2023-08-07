@@ -165,7 +165,8 @@ Enable Google Cloud APIs:
 1. Go to [Cloud Run Console](https://console.cloud.google.com/run)
 2. Create a new service
     1. Select "Continuously deploy new revisions from a source repository"
-    2. In the Service settings page, click Set up with Cloud Build
+    2. Set the [maximum number of instances](https://cloud.google.com/run/docs/configuring/max-instances) running concurrently in the auto-scaling section to limit costs.
+    3. In the Service settings page, click Set up with Cloud Build
         1. Select the provider and the repositor: GitHub in our case
         2. Select the repository to deploy from GitHub
         3. Select the branch
@@ -175,7 +176,7 @@ Enable Google Cloud APIs:
 4. Set the region
 5. Select the CPU allocation and pricing, in our case "CPU is only allocated during request processing"
 6. Set the auto-scaling
-7. Set the ingress control, in aur case "All"
+7. Set the ingress control, in our case "All"
 8. Set the authentication, in our case "Require authentication"
 9. Create
 
@@ -199,6 +200,7 @@ This yaml file must have the following requirements:
 2. Set the address for each call: this address is made by the Cloud Run Service URL (it can find inside Cloud Run, in service details)
 3. Into the securityDefinitions section set [where the API KEY must be provided](https://swagger.io/docs/specification/2-0/authentication/api-keys/), in the URL "query" or into the "header"
 4. Verify the [API Key definition limitations](https://cloud.google.com/endpoints/docs/openapi/openapi-limitations#api_key_definition_limitations) to set the api key name.
+5. Set the [path translation strategy](https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation) used by google.
 
 ```yaml
 swagger: '2.0'
@@ -216,7 +218,8 @@ paths:
       summary: Greet all the products
       operationId: GetProducts
       x-google-backend:
-        address: https://g2l-test-server-xxxxxxxxxxx-uc.a.run.app/v1/products
+        address: https://g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products
+        path_translation: APPEND_PATH_TO_ADDRESS
       security:
       - api_key: []
       responses:
@@ -265,7 +268,7 @@ Enable the managed service:
 Try to acces the Cloud Run Service directly, it will fail becaouse we need an authentication:
 
 ```bash
-curl https://g2l-test-server-xxxxxxxxxxx-uc.a.run.app/v1/products
+curl https://g2l-test-server-xxxxxxxxxxx-eu.a.run.app/v1/products
 
 <html><head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
@@ -293,7 +296,7 @@ gcloud auth login
 TOKEN=$(gcloud auth print-identity-token)
 
 # Call the service with the token
-curl -H "Authorization: Bearer $TOKEN" -H 'Content-Type: text/plain' -d '**Hello Bold Text**' https://onion-g2l-test-server-xxxxxxxxxxx-uc.a.run.app/v1/products
+curl -H "Authorization: Bearer $TOKEN" -H 'Content-Type: text/plain' -d '**Hello Bold Text**' https://onion-g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products
 [ ... ]
 ```
 
