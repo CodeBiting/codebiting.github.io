@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Create a professional web service - Part II - Logging"
+author: Jordi Dalmau Heras
 date:   2023-07-07 07:55:56 +0200
 categories: development
 ---
