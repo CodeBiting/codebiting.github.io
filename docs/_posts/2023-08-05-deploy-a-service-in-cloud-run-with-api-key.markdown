@@ -8,18 +8,46 @@ categories: operations
 
 We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key.
 
-That's why we will first develop a very simple web service with Node.js, deploy it to Cloud Run, configure a GCP service account to access it, define an API with the metrics we will expose with OpenApi v2 format, deploy an API Gateway that will expose the API definition and we will control access using API Keys.
+![API Gateway architecture overview](images/google-apikey-cloudrun.png)
+
+Image from <https://cloud.google.com/api-gateway/docs/architecture-overview>
+
+## Architecture of the solution
+
+The components of the solution that we will use are:
+
+1. A very simple web service with Node.js and deployed to GCP Cloud Run
+2. An API key to identify the caller
+3. A GCP service account to identify the API Gateway and the Cloud Run Service
+4. A GCP API Gateway
+
+### What does an API Key?
 
 We will [use an API KEY](https://cloud.google.com/endpoints/docs/openapi/when-why-api-key) instead other metods because we only want to:
 
 - Block anonymous traffic
-- Control the number of calls made to our API
+- Allows to control the number of calls made to our API
 - Identify usage patterns in our API's traffic
 - Filter logs by API key
 
-![API Gateway architecture overview](images/google-apikey-cloudrun.png)
+### What does an API Gateway do?
 
-Image from <https://cloud.google.com/api-gateway/docs/architecture-overview>
+An API Gateway is used primary to:
+
+1. Validate atributes in the HTTP request
+2. Make a whitelist/blacklist abnd block requests
+3. Validate authentication/autorization talking to a identity provider
+4. Control rate limits, if its over the limit rejects the request
+5. Routing, finds the relevant service to route by path matching
+6. Service discovery
+7. Protocol conversion
+
+Other benefits of using API Gateways are:
+
+1. Error handling
+2. Circuit breaker
+3. Cache
+4. Monitoring and logging
 
 ## Build the web service to deploy
 
