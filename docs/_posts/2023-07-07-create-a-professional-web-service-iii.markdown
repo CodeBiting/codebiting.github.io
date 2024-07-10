@@ -2,7 +2,7 @@
 layout: post
 title:  "Create a professional web service - Part III - Documentation"
 author: Jordi Dalmau Heras
-date:   2023-07-10 17:48:24 +0200
+date:   2023-07-09 17:48:24 +0200
 categories: development
 ---
 Learn how to build a profesional web service with JavaScript, NodeJS and Express.

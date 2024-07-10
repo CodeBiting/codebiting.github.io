@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "Create a professional web service - Part VI - Static analysis with ESLint"
+title:  "Create a professional web service - Part VI - Git hooks to run tests automatically"
 author: Jordi Dalmau Heras
-date:   2024-07-10 17:48:24 +0200
+date:   2024-07-10 08:12:05 +0200
 categories: development
 ---
 Learn how to build a profesional web service with JavaScript, NodeJS and Express.

@@ -2,7 +2,7 @@
 layout: post
 title:  "Create a professional web service - Part V - Static analysis with ESLint"
 author: Jordi Dalmau Heras
-date:   2024-07-10 17:48:24 +0200
+date:   2024-07-09 10:48:24 +0200
 categories: development
 ---
 Learn how to build a profesional web service with JavaScript, NodeJS and Express.
