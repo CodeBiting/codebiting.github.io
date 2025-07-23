@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Create a professional web service - Part VII - Dockerization | CodeBiting’s homepage</title>
+<meta name="generator" content="Jekyll v3.9.3" />
+<meta property="og:title" content="Create a professional web service - Part VII - Dockerization" />
+<meta name="author" content="Jordi Dalmau Heras" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Learn how to package an application and its dependencies into a standardized container called a “Docker container.”" />
+<meta property="og:description" content="Learn how to package an application and its dependencies into a standardized container called a “Docker container.”" />
+<link rel="canonical" href="http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html" />
+<meta property="og:url" content="http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html" />
+<meta property="og:site_name" content="CodeBiting’s homepage" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-07-23T16:25:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Create a professional web service - Part VII - Dockerization" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jordi Dalmau Heras"},"dateModified":"2025-07-23T16:25:00+02:00","datePublished":"2025-07-23T16:25:00+02:00","description":"Learn how to package an application and its dependencies into a standardized container called a “Docker container.”","headline":"Create a professional web service - Part VII - Dockerization","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html"},"url":"http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting&apos;s homepage" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">CodeBiting&#39;s homepage</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Create a professional web service - Part VII - Dockerization</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-07-23T16:25:00+02:00" itemprop="datePublished">Jul 23, 2025
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Jordi Dalmau Heras</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Learn how to package an application and its dependencies into a standardized container called a “Docker container.”</p>
+
+<h2 id="containerizing-the-service">Containerizing the Service</h2>
+
+<p>To deploy using Docker Compose, Swarm, Kubernetes or Cloud Run, we first need to package the application inside a container.</p>
+
+<p>When containerizing, it’s recommended to follow <a href="https://docs.docker.com/build/building/best-practices/">Docker’s official best practices</a>:</p>
+
+<ul>
+  <li>Ensure the final image is small and fast to load:
+    <ul>
+      <li>Use <strong>multi-stage builds</strong></li>
+      <li>Choose a <strong>trusted base image</strong></li>
+      <li>Select the <strong>smallest image possible</strong> for portability, fast startup, and minimal attack surface</li>
+      <li>Avoid installing unnecessary packages</li>
+    </ul>
+  </li>
+  <li>Rebuild images regularly to <strong>update dependencies</strong> and reduce vulnerabilities</li>
+  <li>Exclude irrelevant files from the build context</li>
+  <li>Create <strong>ephemeral containers</strong> that can be stopped, removed, and recreated with minimal configuration</li>
+  <li><strong>Decouple applications</strong> into multiple containers — each with a single responsibility</li>
+  <li>Leverage <strong>build cache</strong> to speed up builds and reuse common layers</li>
+  <li>Pin image versions using <strong>immutable digests (hashes)</strong> to avoid breaking changes</li>
+  <li><strong>Test images</strong> as part of the CI (Continuous Integration) pipeline</li>
+</ul>
+
+<hr />
+
+<h2 id="creating-the-dockerfile">Creating the <code class="language-plaintext highlighter-rouge">Dockerfile</code></h2>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s">        # Specify the base image</span>
+<span class="k">LABEL</span><span class="s">       # Metadata for organization and licensing</span>
+<span class="k">RUN         </span><span class="c"># Install dependencies into the image</span>
+<span class="k">CMD</span><span class="s">         # Run the main software inside the image</span>
+<span class="k">EXPOSE</span><span class="s">      # Define the exposed ports</span>
+<span class="k">ENV</span><span class="s">         # Set environment variables</span>
+<span class="k">ADD</span><span class="s"> / COPY  # Copy folders and files into the container</span>
+<span class="k">ENTRYPOINT</span><span class="s">  # Main command of the image</span>
+<span class="k">VOLUME</span><span class="s">      # Declare mountable persistent storage</span>
+<span class="k">USER</span><span class="s">        # Specify non-root user for running the service</span>
+<span class="k">WORKDIR</span><span class="s">     # Set working directory inside the container</span>
+ONBUILD     <span class="c"># Define instructions for child builds</span>
+</code></pre></div></div>
+
+<h2 id="create-the-container-locally-and-see-if-it-works-correctly">Create the container locally and see if it works correctly</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Check which images we have locally</span>
+<span class="nv">$ </span>docker images
+
+<span class="c"># Build a local image from the Dockerfile</span>
+<span class="c"># docker build --tag &lt;new image name&gt; &lt;path to Dockerfile&gt;</span>
+<span class="c"># Use a new version tag each time</span>
+<span class="nv">$ </span>docker build <span class="nt">--tag</span> codebiting/onion-cargo-loading:v1 <span class="nb">.</span>
+
+<span class="c"># Verify that the image was created successfully by checking if it exists</span>
+<span class="nv">$ </span>docker images
+
+<span class="c"># Run the image in interactive mode</span>
+<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 8080:8080 <span class="nt">-d</span> codebiting/onion-cargo-loading:v1
+
+<span class="c"># Check that the container is running with the correct ports, and review its logs:</span>
+<span class="nv">$ </span>docker ps
+<span class="nv">$ </span>docker logs &lt;container <span class="nb">id</span><span class="o">&gt;</span>
+<span class="nv">$ </span>docker inspect &lt;container <span class="nb">id</span><span class="o">&gt;</span>
+
+<span class="c"># See all containers (running and exited)</span>
+<span class="nv">$ </span>docker ps <span class="nt">-a</span>
+
+<span class="c"># Confirm that the application is working by opening the following URL in a browser:</span>
+<span class="o">[</span>http://&lt;my.servlet.host&gt;:8080/api-documentation]<span class="o">(</span>http://localhost:8080/api-documentation/<span class="o">)</span>
+
+<span class="c"># Enter the running container (for debugging or inspection)</span>
+<span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> &lt;container <span class="nb">id</span><span class="o">&gt;</span> /bin/bash
+
+<span class="c"># If the container is stopped, you can start and attach to it with:</span>
+<span class="nv">$ </span>docker start <span class="nt">-ai</span> &lt;container <span class="nb">id</span><span class="o">&gt;</span>
+
+<span class="c"># Stop the container — two options:</span>
+<span class="nv">$ </span>docker stop &lt;container <span class="nb">id</span><span class="o">&gt;</span>
+<span class="nv">$ </span>docker <span class="nb">kill</span> &lt;container <span class="nb">id</span><span class="o">&gt;</span>
+
+<span class="c"># Run the container using Docker Compose</span>
+<span class="c"># Reference:</span>
+<span class="c"># https://docs.docker.com/compose/</span>
+<span class="c"># https://docs.docker.com/compose/production/</span>
+<span class="c"># https://www.educative.io/blog/docker-compose-tutorial</span>
+</code></pre></div></div>
+
+  </div><a class="u-url" href="/development/2025/07/23/create-a-professional-web-service-Vii.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CodeBiting&#39;s homepage</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">CodeBiting&#39;s homepage</li><li><a class="u-email" href="mailto:info@codebiting.com">info@codebiting.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/CodeBiting"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">CodeBiting</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>As a web application development company here is a series of guides and developed applications.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

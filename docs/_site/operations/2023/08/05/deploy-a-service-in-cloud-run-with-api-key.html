@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Deploy a service into GCP Cloud Run and secure with an API Key | CodeBiting’s homepage</title>
+<meta name="generator" content="Jekyll v3.9.3" />
+<meta property="og:title" content="Deploy a service into GCP Cloud Run and secure with an API Key" />
+<meta name="author" content="Jordi Dalmau Heras" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key." />
+<meta property="og:description" content="We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key." />
+<link rel="canonical" href="http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html" />
+<meta property="og:url" content="http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html" />
+<meta property="og:site_name" content="CodeBiting’s homepage" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-08-05T09:40:12+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Deploy a service into GCP Cloud Run and secure with an API Key" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jordi Dalmau Heras"},"dateModified":"2023-08-05T09:40:12+02:00","datePublished":"2023-08-05T09:40:12+02:00","description":"We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key.","headline":"Deploy a service into GCP Cloud Run and secure with an API Key","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html"},"url":"http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="CodeBiting&apos;s homepage" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">CodeBiting&#39;s homepage</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Deploy a service into GCP Cloud Run and secure with an API Key</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-08-05T09:40:12+02:00" itemprop="datePublished">Aug 5, 2023
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Jordi Dalmau Heras</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key.</p>
+
+<p><img src="images/google-apikey-cloudrun.png" alt="API Gateway architecture overview" /></p>
+
+<p>Image from <a href="https://cloud.google.com/api-gateway/docs/architecture-overview">https://cloud.google.com/api-gateway/docs/architecture-overview</a></p>
+
+<h2 id="architecture-of-the-solution">Architecture of the solution</h2>
+
+<p>The components of the solution that we will use are:</p>
+
+<ol>
+  <li>A very simple web service with Node.js and deployed to GCP Cloud Run</li>
+  <li>An API key to identify the caller</li>
+  <li>A GCP service account to identify the API Gateway and the Cloud Run Service</li>
+  <li>A GCP API Gateway</li>
+</ol>
+
+<h3 id="what-does-an-api-key">What does an API Key?</h3>
+
+<p>We will <a href="https://cloud.google.com/endpoints/docs/openapi/when-why-api-key">use an API KEY</a> instead other metods because we only want to:</p>
+
+<ul>
+  <li>Block anonymous traffic</li>
+  <li>Allows to control the number of calls made to our API</li>
+  <li>Identify usage patterns in our API’s traffic</li>
+  <li>Filter logs by API key</li>
+</ul>
+
+<h3 id="what-does-an-api-gateway-do">What does an API Gateway do?</h3>
+
+<p>An API Gateway is used primary to:</p>
+
+<ol>
+  <li>Validate atributes in the HTTP request</li>
+  <li>Make a whitelist/blacklist abnd block requests</li>
+  <li>Validate authentication/autorization talking to a identity provider</li>
+  <li>Control rate limits, if its over the limit rejects the request</li>
+  <li>Routing, finds the relevant service to route by path matching</li>
+  <li>Service discovery</li>
+  <li>Protocol conversion</li>
+</ol>
+
+<p>Other benefits of using API Gateways are:</p>
+
+<ol>
+  <li>Error handling</li>
+  <li>Circuit breaker</li>
+  <li>Cache</li>
+  <li>Monitoring and logging</li>
+</ol>
+
+<h2 id="build-the-web-service-to-deploy">Build the web service to deploy</h2>
+
+<h3 id="develop-the-service-and-the-dockerfile">Develop the service and the Dockerfile</h3>
+
+<p>First of all, we have developed a very simple web service that exposes several APIs using Node.js.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">http</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="c1">// A JSON array of products</span>
+<span class="kd">const</span> <span class="nx">products</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">./products.json</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">host</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">0.0.0.0</span><span class="dl">'</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">requestListener</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request to url:`</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">);</span>
+
+  <span class="kd">const</span> <span class="p">{</span> <span class="nx">headers</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">url</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">req</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="nx">body</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="nx">req</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">error</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "Internal server error </span><span class="p">${</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span><span class="s2">"}`</span><span class="p">);</span>
+  <span class="p">}).</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">data</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">body</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chunk</span><span class="p">);</span>
+  <span class="p">}).</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">end</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">body</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">body</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request [</span><span class="p">${</span><span class="nx">method</span><span class="p">}</span><span class="s2">] </span><span class="p">${</span><span class="nx">url</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request with headers:`</span><span class="p">,</span> <span class="nx">headers</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Received request with body data:`</span><span class="p">,</span> <span class="nx">body</span><span class="p">);</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="dl">"</span><span class="s2">Content-Type</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">application/json</span><span class="dl">"</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">url</span> <span class="o">==</span> <span class="dl">'</span><span class="s1">/v1/products</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">products</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="kd">const</span> <span class="nx">urlProductRegex</span> <span class="o">=</span> <span class="sr">/^</span><span class="se">\/</span><span class="sr">v1</span><span class="se">\/</span><span class="sr">products</span><span class="se">\/[</span><span class="sr">0-9</span><span class="se">]</span><span class="sr">+/</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">urlProductRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">let</span> <span class="nx">index</span> <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">lastIndexOf</span><span class="p">(</span><span class="dl">'</span><span class="s1">/</span><span class="dl">'</span><span class="p">);</span>
+      <span class="kd">let</span> <span class="nx">idFound</span> <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+      <span class="kd">let</span> <span class="nx">objectFound</span> <span class="o">=</span> <span class="nx">products</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">id</span> <span class="o">==</span> <span class="nx">idFound</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">objectFound</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">objectFound</span><span class="p">));</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "product with id </span><span class="p">${</span><span class="nx">idFound</span><span class="p">}</span><span class="s2"> not found"}`</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// RESOURCE NOT FOUND</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">`{"message": "</span><span class="p">${</span><span class="nx">url</span><span class="p">}</span><span class="s2"> not found"}`</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">requestListener</span><span class="p">);</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">,</span> <span class="nx">host</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server is running on http://</span><span class="p">${</span><span class="nx">host</span><span class="p">}</span><span class="s2">:</span><span class="p">${</span><span class="nx">port</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>If we want to deploy this service into Cloud Run, we need to choose how to do it. Google Cloud provides us with several <a href="https://cloud.google.com/run/docs/deploying">options</a>:</p>
+
+<ol>
+  <li><a href="https://cloud.google.com/run/docs/deploying">Deploy container images</a>: the idea is build a container image, push to a container registry (<a href="https://cloud.google.com/artifact-registry/docs/overview">Google Artifact Registry</a> or <a href="https://hub.docker.com/">Docker Hub</a>) and build the Cloud Run Service from the image pushed into the container registry</li>
+  <li><a href="https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build">Continous deployment from git</a>: the idea is link a git repository to Cloud Run and every time the master branch of the repository is updated automatically it deploys a new Cloud Run Service.</li>
+  <li><a href="https://cloud.google.com/run/docs/deploying-source-code">Deploy from source code</a>: Cloud Run supports several languages and allows to push a source code manually. This deployment method doesn’t require a Dockerfile.</li>
+</ol>
+
+<p>For our purpose, we choose the 2nd method: continuous deployment from GitHub. With this method, we will be able to deploy new versions by making commits to the branch we select in the GitHub repository, which will significantly speed up the deployment process. This approach is very useful not only during the development process but also in production for performing maintenance and fixing bugs.</p>
+
+<p>To achieve this, we need a Dockerfile to create a container image and connect GitHub to Google Cloud.</p>
+
+<p>To build a Dockerfile, we need to define several key points:</p>
+
+<ol>
+  <li>The base image of the container: select the <a href="https://hub.docker.com/search?q=&amp;type=image&amp;image_filter=official">images</a> that fit your project and has a small size as possible. We choose <a href="https://hub.docker.com/_/node">node alpine images</a>.</li>
+  <li>The port exposed by the container: Cloud Run exposes the port 8080 by default and we set this port to avoid extra <a href="https://cloud.google.com/run/docs/configuring/services/containers">configuration</a>.</li>
+</ol>
+
+<p>Our Dockerfile is:</p>
+
+<div class="language-Dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># pull official base image</span>
+<span class="k">FROM</span><span class="s"> node:20-alpine</span>
+
+<span class="k">LABEL</span><span class="s"> version="1.0"</span>
+
+<span class="c"># set working directory</span>
+<span class="k">COPY</span><span class="s"> . /app</span>
+<span class="k">WORKDIR</span><span class="s"> /app</span>
+
+<span class="c"># Exposem el port de l'aplicacio</span>
+<span class="k">EXPOSE</span><span class="s"> 8080</span>
+<span class="c"># Definim la comanda per executar l'aplicacio</span>
+<span class="k">CMD</span><span class="s"> ["node", "./index.js"]</span>
+</code></pre></div></div>
+
+<h3 id="test-the-service-in-test-environment">Test the service in test environment</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Create and tag the docker image</span>
+<span class="nb">sudo </span>docker build <span class="nt">--tag</span> codebiting/g2l-test-server:v1 <span class="nb">.</span>
+
+<span class="c"># Run the docker in test</span>
+<span class="nb">sudo </span>docker run <span class="nt">-p</span> 8080:8080 <span class="nt">-d</span> codebiting/g2l-test-server:v1
+
+<span class="c"># Check that the docker is running</span>
+<span class="nb">sudo </span>docker ps
+
+<span class="c"># Inspect the docker logs</span>
+<span class="nb">sudo </span>docker logs &lt;container_id&gt;
+
+<span class="c"># Check that from inside the docker can access the app</span>
+<span class="nb">sudo </span>docker <span class="nb">exec</span> <span class="nt">-it</span> &lt;container_id&gt; sh <span class="nt">-c</span> <span class="s1">'wget http://localhost:8080'</span>
+
+<span class="c"># Get docker info to search "IPAddress" for the docker IP.</span>
+<span class="nb">sudo </span>docker inspect &lt;container_id&gt;
+
+<span class="c"># Test with a browser the docker</span>
+curl http://&lt;IPAddress&gt;:8080
+</code></pre></div></div>
+
+<h2 id="deploy-the-service-to-cloud-run">Deploy the service to Cloud Run</h2>
+
+<p>See <a href="https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build">https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build</a></p>
+
+<h3 id="create-a-new-google-cloud-project-to-aisle-billing-from-other-projects">Create a new Google Cloud project to aisle billing from other projects</h3>
+
+<p>In order to isolate the project and its associated costs we will create a new Google Cloud project.
+Go to <a href="https://console.cloud.google.com/projectcreate">IAM and admin -&gt; Create a project</a> and create a new project.</p>
+
+<p>Enable Google Cloud APIs:</p>
+
+<ul>
+  <li>Cloud Source Repositories API</li>
+  <li>Cloud Build API</li>
+</ul>
+
+<h3 id="setting-up-continuous-deployment-from-the-cloud-run-user-interface">Setting up continuous deployment from the Cloud Run user interface</h3>
+
+<ol>
+  <li>Go to <a href="https://console.cloud.google.com/run">Cloud Run Console</a></li>
+  <li>Create a new service
+    <ol>
+      <li>Select “Continuously deploy new revisions from a source repository”</li>
+      <li>Set the <a href="https://cloud.google.com/run/docs/configuring/max-instances">maximum number of instances</a> running concurrently in the auto-scaling section to limit costs.</li>
+      <li>In the Service settings page, click Set up with Cloud Build
+        <ol>
+          <li>Select the provider and the repositor: GitHub in our case</li>
+          <li>Select the repository to deploy from GitHub</li>
+          <li>Select the branch</li>
+          <li>Select the built type: in our case Dockerfile</li>
+          <li>Save and Create</li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li>Set the service name</li>
+  <li>Set the region</li>
+  <li>Select the CPU allocation and pricing, in our case “CPU is only allocated during request processing”</li>
+  <li>Set the auto-scaling</li>
+  <li>Set the ingress control, in our case “All”</li>
+  <li>Set the authentication, in our case “Require authentication”</li>
+  <li>Create</li>
+</ol>
+
+<h2 id="create-a-service-account-to-allow-access-to-the-service">Create a service account to allow access to the service</h2>
+
+<p>To be able to access the service deployed on Cloud Run, we will create a service account with the minimum permissions required to make calls to the service. API Gateway will then use this service account to access the service.</p>
+
+<ol>
+  <li>Go to <a href="https://cloud.google.com/run/docs/authenticating/service-to-service">IAM and admin -&gt; Service accounts</a></li>
+  <li>Create service account</li>
+  <li>Set a service account name: note that the service account id and the email address are created automatically from the name</li>
+  <li>Set a role: to invoke a cloud run service its needed the role “Cloud Run Invoker”</li>
+  <li>Create</li>
+</ol>
+
+<h2 id="create-an-api-gateway-with-apy-key-authentication">Create an API Gateway with APY KEY authentication</h2>
+
+<h3 id="create-a-openapi-2-definition-in-yaml-format-for-the-api-specifiying-an-api-key-to-authenticate-the-calls">Create a OpenApi 2 definition in yaml format for the API specifiying an API-KEY to authenticate the calls</h3>
+
+<p>This yaml file must have the following requirements:</p>
+
+<ol>
+  <li>The title must have an API_ID followed by a description. The value of the title field is used when minting API keys that grant access to this API. See API ID requirements for API naming guidelines.</li>
+  <li>Set the address for each call: this address is made by the Cloud Run Service URL (it can find inside Cloud Run, in service details)</li>
+  <li>Into the securityDefinitions section set <a href="https://swagger.io/docs/specification/2-0/authentication/api-keys/">where the API KEY must be provided</a>, in the URL “query” or into the “header”</li>
+  <li>Verify the <a href="https://cloud.google.com/endpoints/docs/openapi/openapi-limitations#api_key_definition_limitations">API Key definition limitations</a> to set the api key name.</li>
+  <li>Set the <a href="https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation">path translation strategy</a> used by google.</li>
+</ol>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">swagger</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2.0'</span>
+<span class="na">info</span><span class="pi">:</span>
+  <span class="na">title</span><span class="pi">:</span> <span class="s">backend-apigateway-secure-v1 G2L Integration API</span>
+  <span class="na">description</span><span class="pi">:</span> <span class="s">G2L Integration API on API Gateway with a Google Cloud Run Backend</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="s">1.0.0</span>
+<span class="na">schemes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">https</span>
+<span class="na">produces</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">application/json</span>
+<span class="na">paths</span><span class="pi">:</span>
+  <span class="s">/v1/products</span><span class="pi">:</span>
+    <span class="na">get</span><span class="pi">:</span>
+      <span class="na">summary</span><span class="pi">:</span> <span class="s">Greet all the products</span>
+      <span class="na">operationId</span><span class="pi">:</span> <span class="s">GetProducts</span>
+      <span class="na">x-google-backend</span><span class="pi">:</span>
+        <span class="na">address</span><span class="pi">:</span> <span class="s">https://g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products</span>
+        <span class="na">path_translation</span><span class="pi">:</span> <span class="s">APPEND_PATH_TO_ADDRESS</span>
+      <span class="na">security</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">api_key</span><span class="pi">:</span> <span class="pi">[]</span>
+      <span class="na">responses</span><span class="pi">:</span>
+        <span class="s1">'</span><span class="s">200'</span><span class="pi">:</span>
+          <span class="na">description</span><span class="pi">:</span> <span class="s">A successful response</span>
+          <span class="na">schema</span><span class="pi">:</span>
+            <span class="na">type</span><span class="pi">:</span> <span class="s">string</span>
+<span class="na">securityDefinitions</span><span class="pi">:</span>
+  <span class="c1"># This section configures basic authentication with an API key.</span>
+  <span class="na">api_key</span><span class="pi">:</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">apiKey"</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">x-api-key"</span>
+    <span class="na">in</span><span class="pi">:</span> <span class="s2">"</span><span class="s">header"</span>
+</code></pre></div></div>
+
+<h3 id="create-an-api-key">Create an API Key</h3>
+
+<ol>
+  <li>Go to <a href="https://console.cloud.google.com/apis/credentials">API and services -&gt; Credentials</a> and <a href="https://cloud.google.com/docs/authentication/api-keys#creating_an_api_key">create an API Key</a>, by default the API can call any enabled API and has no restrictions.</li>
+  <li>Restrit to “API Gateway API”</li>
+  <li>Copy the key to use when calling the API</li>
+</ol>
+
+<h3 id="create-the-api-gateway">Create the API Gateway</h3>
+
+<ol>
+  <li>Go to <a href="https://console.cloud.google.com/api-gateway/api">API gateway</a></li>
+  <li>Create an API Gateway
+    <ol>
+      <li>API Name: set a descriptive name, ex: <code class="language-plaintext highlighter-rouge">G2L Integration API</code></li>
+      <li>API ID: set the API ID, set the same id as the title of the OpenAPI 2 yaml specification, ex: <code class="language-plaintext highlighter-rouge">backend-apigateway-secure-v1</code></li>
+    </ol>
+  </li>
+  <li>Setup the API config
+    <ol>
+      <li>Upload the OpenApi 2 spec in yaml format</li>
+      <li>API config name, ex: <code class="language-plaintext highlighter-rouge">G2L integration config</code></li>
+      <li>Select a service account with permissions to invoke Cloud Run services</li>
+    </ol>
+  </li>
+  <li>Setup Gateway details:
+    <ol>
+      <li>Gateway name, ex: <code class="language-plaintext highlighter-rouge">G2L Integration Gateway</code></li>
+      <li>Select the region, ex: <code class="language-plaintext highlighter-rouge">europe-west1</code></li>
+    </ol>
+  </li>
+  <li>Create the API gateway</li>
+  <li>Wait until the creation is finished, can last several minutes</li>
+  <li>Click in the API Gateway to see the details, in “Gateways” tab, copy the external URL generated by Google, ex: <code class="language-plaintext highlighter-rouge">https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev</code></li>
+  <li>Copy the managed service name so secure the API with a key, ex: <code class="language-plaintext highlighter-rouge">g2l-integration-api-v1-xxxxxxxxxxx.apigateway.g2l-integration.cloud.goog</code></li>
+</ol>
+
+<p>Enable the managed service:</p>
+
+<ol>
+  <li>Go to <a href="https://console.cloud.google.com/apis/dashboard">APIs and services -&gt; Enabled APIs and services</a>, search by the Cloud Run Service managed service name, and enable it. it can be enabled with the command <code class="language-plaintext highlighter-rouge">gcloud services enable g2l-integration-api-v1-xxxxxxxxxxx.apigateway.g2l-integration.cloud.goog</code></li>
+</ol>
+
+<h2 id="test-the-service">Test the service</h2>
+
+<p>Try to acces the Cloud Run Service directly, it will fail becaouse we need an authentication:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://g2l-test-server-xxxxxxxxxxx-eu.a.run.app/v1/products
+
+&lt;html&gt;&lt;<span class="nb">head</span><span class="o">&gt;</span>
+&lt;meta http-equiv<span class="o">=</span><span class="s2">"content-type"</span> <span class="nv">content</span><span class="o">=</span><span class="s2">"text/html;charset=utf-8"</span><span class="o">&gt;</span>
+&lt;title&gt;403 Forbidden&lt;/title&gt;
+&lt;/head&gt;
+&lt;body <span class="nv">text</span><span class="o">=</span><span class="c">#000000 bgcolor=#ffffff&gt;</span>
+&lt;h1&gt;Error: Forbidden&lt;/h1&gt;
+&lt;h2&gt;Your client does not have permission to get URL &lt;code&gt;/&lt;/code&gt; from this server.&lt;/h2&gt;
+&lt;h2&gt;&lt;/h2&gt;
+&lt;/body&gt;&lt;/html&gt;
+
+</code></pre></div></div>
+
+<p>Try to access the Cloud Run Service directly with an Oauth2 token, it will succeed because we use OAuth authentication:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Configure the project and region</span>
+gcloud config <span class="nb">set </span>project g2l-integration
+gcloud config <span class="nb">set </span>run/region europe
+
+<span class="c"># Login with a user with privileges to execute the service </span>
+gcloud auth login
+
+<span class="c"># Generate the token</span>
+<span class="nv">TOKEN</span><span class="o">=</span><span class="si">$(</span>gcloud auth print-identity-token<span class="si">)</span>
+
+<span class="c"># Call the service with the token</span>
+curl <span class="nt">-H</span> <span class="s2">"Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">"</span> <span class="nt">-H</span> <span class="s1">'Content-Type: text/plain'</span> <span class="nt">-d</span> <span class="s1">'**Hello Bold Text**'</span> https://onion-g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products
+<span class="o">[</span> ... <span class="o">]</span>
+</code></pre></div></div>
+
+<p>Try to access the service through the API Gateway the API with no authentication (without key in header o query), it will return an error:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products
+<span class="o">{</span><span class="s2">"code"</span>:401,<span class="s2">"message"</span>:<span class="s2">"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>Try to access the API with the API key support disabled, it will return an error:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">--location</span> <span class="nt">--request</span> GET <span class="s1">'https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products'</span> <span class="se">\</span>
+<span class="nt">--header</span> <span class="s1">'Content-Type: application/json'</span> <span class="se">\</span>
+<span class="nt">--header</span> <span class="s1">'x-api-key: KKKKKKKKKKKKKKKKKKKKKKKK'</span>
+<span class="o">{</span><span class="s2">"message"</span>:<span class="s2">"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."</span>,<span class="s2">"code"</span>:401<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Try to access the API with a wrong key, it will return an error:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">--location</span> <span class="nt">--request</span> GET <span class="s1">'https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products'</span> <span class="nt">--header</span> <span class="s1">'Content-Type: application/json'</span> <span class="nt">--header</span> <span class="s1">'x-api-key: EEEEEEEEEEEEEEEEEEEEE'</span>
+<span class="o">{</span><span class="s2">"code"</span>:400,<span class="s2">"message"</span>:<span class="s2">"INVALID_ARGUMENT:API key not valid. Please pass a valid API key."</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>Try to access with the correct key:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">--location</span> <span class="nt">--request</span> GET <span class="s1">'https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products'</span> <span class="nt">--header</span> <span class="s1">'Content-Type: application/json'</span> <span class="nt">--header</span> <span class="s1">'x-api-key: KKKKKKKKKKKKKKKKKKKKKKKK'</span>
+<span class="o">[</span> ... <span class="o">]</span>
+</code></pre></div></div>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>Now that we have a service that can be called through an API Gateway, it’s time to enhance security and analyze the logs.</p>
+
+<p>Keep in mind that API KEY authentication is vulnerable to a man-in-the-middle attack. To reduce this vulnerability, use OAuth2 authentication</p>
+
+<p>To grant more security <a href="https://cloud.google.com/docs/authentication/api-keys#creating_an_api_key">secure the APY key with restrictions</a></p>
+
+  </div><a class="u-url" href="/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CodeBiting&#39;s homepage</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">CodeBiting&#39;s homepage</li><li><a class="u-email" href="mailto:info@codebiting.com">info@codebiting.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/CodeBiting"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">CodeBiting</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>As a web application development company here is a series of guides and developed applications.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

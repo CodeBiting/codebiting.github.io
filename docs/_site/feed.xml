@@ -1,4 +1,595 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-12T16:40:43+02:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">CodeBiting’s homepage</title><subtitle>As a web application development company here is a series of guides and developed applications.</subtitle><entry><title type="html">MySQL Deadlocks Analysis - Part I - Documentation</title><link href="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html" rel="alternate" type="text/html" title="MySQL Deadlocks Analysis - Part I - Documentation" /><published>2023-07-12T13:35:24+02:00</published><updated>2023-07-12T13:35:24+02:00</updated><id>http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv</id><content type="html" xml:base="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-iv.html">&lt;p&gt;Learn how deadlocks works in .&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-07-23T16:40:00+02:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">CodeBiting’s homepage</title><subtitle>As a web application development company here is a series of guides and developed applications.</subtitle><entry><title type="html">Create a professional web service - Part VII - Dockerization</title><link href="http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html" rel="alternate" type="text/html" title="Create a professional web service - Part VII - Dockerization" /><published>2025-07-23T16:25:00+02:00</published><updated>2025-07-23T16:25:00+02:00</updated><id>http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii</id><content type="html" xml:base="http://localhost:4000/development/2025/07/23/create-a-professional-web-service-Vii.html">&lt;p&gt;Learn how to package an application and its dependencies into a standardized container called a “Docker container.”&lt;/p&gt;
+
+&lt;h2 id=&quot;containerizing-the-service&quot;&gt;Containerizing the Service&lt;/h2&gt;
+
+&lt;p&gt;To deploy using Docker Compose, Swarm, Kubernetes or Cloud Run, we first need to package the application inside a container.&lt;/p&gt;
+
+&lt;p&gt;When containerizing, it’s recommended to follow &lt;a href=&quot;https://docs.docker.com/build/building/best-practices/&quot;&gt;Docker’s official best practices&lt;/a&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Ensure the final image is small and fast to load:
+    &lt;ul&gt;
+      &lt;li&gt;Use &lt;strong&gt;multi-stage builds&lt;/strong&gt;&lt;/li&gt;
+      &lt;li&gt;Choose a &lt;strong&gt;trusted base image&lt;/strong&gt;&lt;/li&gt;
+      &lt;li&gt;Select the &lt;strong&gt;smallest image possible&lt;/strong&gt; for portability, fast startup, and minimal attack surface&lt;/li&gt;
+      &lt;li&gt;Avoid installing unnecessary packages&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Rebuild images regularly to &lt;strong&gt;update dependencies&lt;/strong&gt; and reduce vulnerabilities&lt;/li&gt;
+  &lt;li&gt;Exclude irrelevant files from the build context&lt;/li&gt;
+  &lt;li&gt;Create &lt;strong&gt;ephemeral containers&lt;/strong&gt; that can be stopped, removed, and recreated with minimal configuration&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Decouple applications&lt;/strong&gt; into multiple containers — each with a single responsibility&lt;/li&gt;
+  &lt;li&gt;Leverage &lt;strong&gt;build cache&lt;/strong&gt; to speed up builds and reuse common layers&lt;/li&gt;
+  &lt;li&gt;Pin image versions using &lt;strong&gt;immutable digests (hashes)&lt;/strong&gt; to avoid breaking changes&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Test images&lt;/strong&gt; as part of the CI (Continuous Integration) pipeline&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;creating-the-dockerfile&quot;&gt;Creating the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt;&lt;/h2&gt;
+
+&lt;div class=&quot;language-dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;        # Specify the base image&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;LABEL&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;       # Metadata for organization and licensing&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RUN         &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# Install dependencies into the image&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CMD&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;         # Run the main software inside the image&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;EXPOSE&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;      # Define the exposed ports&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ENV&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;         # Set environment variables&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ADD&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; / COPY  # Copy folders and files into the container&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ENTRYPOINT&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;  # Main command of the image&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;VOLUME&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;      # Declare mountable persistent storage&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;USER&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;        # Specify non-root user for running the service&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WORKDIR&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;     # Set working directory inside the container&lt;/span&gt;
+ONBUILD     &lt;span class=&quot;c&quot;&gt;# Define instructions for child builds&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;create-the-container-locally-and-see-if-it-works-correctly&quot;&gt;Create the container locally and see if it works correctly&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Check which images we have locally&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker images
+
+&lt;span class=&quot;c&quot;&gt;# Build a local image from the Dockerfile&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# docker build --tag &amp;lt;new image name&amp;gt; &amp;lt;path to Dockerfile&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Use a new version tag each time&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker build &lt;span class=&quot;nt&quot;&gt;--tag&lt;/span&gt; codebiting/onion-cargo-loading:v1 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Verify that the image was created successfully by checking if it exists&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker images
+
+&lt;span class=&quot;c&quot;&gt;# Run the image in interactive mode&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 8080:8080 &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; codebiting/onion-cargo-loading:v1
+
+&lt;span class=&quot;c&quot;&gt;# Check that the container is running with the correct ports, and review its logs:&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker ps
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker logs &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker inspect &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# See all containers (running and exited)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker ps &lt;span class=&quot;nt&quot;&gt;-a&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Confirm that the application is working by opening the following URL in a browser:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;http://&amp;lt;my.servlet.host&amp;gt;:8080/api-documentation]&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;http://localhost:8080/api-documentation/&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Enter the running container (for debugging or inspection)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /bin/bash
+
+&lt;span class=&quot;c&quot;&gt;# If the container is stopped, you can start and attach to it with:&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker start &lt;span class=&quot;nt&quot;&gt;-ai&lt;/span&gt; &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Stop the container — two options:&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker stop &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker &lt;span class=&quot;nb&quot;&gt;kill&lt;/span&gt; &amp;lt;container &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Run the container using Docker Compose&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Reference:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# https://docs.docker.com/compose/&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# https://docs.docker.com/compose/production/&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# https://www.educative.io/blog/docker-compose-tutorial&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to package an application and its dependencies into a standardized container called a “Docker container.”</summary></entry><entry><title type="html">Create a professional web service - Part VI - Git hooks to run tests automatically</title><link href="http://localhost:4000/development/2024/07/10/create-a-professional-web-service-Vi.html" rel="alternate" type="text/html" title="Create a professional web service - Part VI - Git hooks to run tests automatically" /><published>2024-07-10T08:12:05+02:00</published><updated>2024-07-10T08:12:05+02:00</updated><id>http://localhost:4000/development/2024/07/10/create-a-professional-web-service-Vi</id><content type="html" xml:base="http://localhost:4000/development/2024/07/10/create-a-professional-web-service-Vi.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+
+&lt;h2 id=&quot;pre-commit-git-hook&quot;&gt;Pre-commit Git hook&lt;/h2&gt;
+
+&lt;p&gt;A Git pre-commit hook is a script that runs automatically every time you run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git commit&lt;/code&gt; before the commit actually happens. It is a type of Git hook, which are scripts that Git executes before or after events such as commit, push, and receive.&lt;/p&gt;
+
+&lt;p&gt;A pre-commit hook is located in the .git/hooks/ directory of a Git repository and is typically named pre-commit (without an extension). When you run git commit, Git will execute this script before finalizing the commit. The script can be written in any programming or scripting language, as long as it is executable.&lt;/p&gt;
+
+&lt;h3 id=&quot;why-is-useful&quot;&gt;Why is useful?&lt;/h3&gt;
+
+&lt;p&gt;Code Quality Assurance:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Linting: Automatically run linters to ensure code adheres to defined style guidelines.&lt;/li&gt;
+  &lt;li&gt;Static Analysis: Perform static code analysis to catch common bugs and vulnerabilities.&lt;/li&gt;
+  &lt;li&gt;Unit Tests: Run unit tests to make sure new commits do not break existing functionality.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Consistency:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Formatting: Automatically format code according to project standards (e.g., using tools like Prettier or Black).&lt;/li&gt;
+  &lt;li&gt;Metadata Checks: Ensure commit messages follow a certain format or include necessary information.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Preventing Mistakes:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;File Validations: Ensure no sensitive files (e.g., configuration files with credentials) are committed.&lt;/li&gt;
+  &lt;li&gt;Dependency Checks: Verify that dependencies are correctly updated and committed.&lt;/li&gt;
+  &lt;li&gt;Prevention of Large Files: Prevent accidental commits of large files which should not be in the repository.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Efficiency:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Automated Tasks: Automatically update documentation, run scripts, or perform other routine tasks without manual intervention.&lt;/li&gt;
+  &lt;li&gt;Minimizing CI/CD Failures: By catching issues early, pre-commit hooks help reduce the chances of failed CI/CD builds.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;installation-and-configurartion-in-expressjs&quot;&gt;Installation and configurartion in ExpressJS&lt;/h3&gt;
+
+&lt;p&gt;Install and configure the git pre-commit hook with the package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://www.npmjs.com/package/pre-commit&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;pre-commit &lt;span class=&quot;nt&quot;&gt;--save-dev&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Add to the package.json file the tests that the pre-commit must run&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;scripts&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;start&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./bin/www&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/mocha/bin/mocha&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-apis&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/mocha/bin/mocha ./test/api/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-routes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./bin/www &amp;amp; P1=$! &amp;amp;&amp;amp; sleep 2 &amp;amp;&amp;amp; node ./node_modules/mocha/bin/mocha ./test/routes/v1/ &amp;amp;&amp;amp; kill $P1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-eslint&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/.bin/eslint app.js bin/www api/*.js routes/*.js&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;pre-commit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;test-apis&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;test-routes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;test-eslint&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part V - Static analysis with ESLint</title><link href="http://localhost:4000/development/2024/07/09/create-a-professional-web-service-V.html" rel="alternate" type="text/html" title="Create a professional web service - Part V - Static analysis with ESLint" /><published>2024-07-09T10:48:24+02:00</published><updated>2024-07-09T10:48:24+02:00</updated><id>http://localhost:4000/development/2024/07/09/create-a-professional-web-service-V</id><content type="html" xml:base="http://localhost:4000/development/2024/07/09/create-a-professional-web-service-V.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+
+&lt;h2 id=&quot;static-analysis&quot;&gt;Static Analysis&lt;/h2&gt;
+
+&lt;p&gt;ESLint is a tool for a static code analysis and code style enforcing &lt;a href=&quot;https://eslint.org/docs/latest/use/getting-started&quot;&gt;https://eslint.org/docs/latest/use/getting-started&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;installation-and-configurartion-in-expressjs&quot;&gt;Installation and configurartion in ExpressJS&lt;/h3&gt;
+
+&lt;p&gt;Execute the installation and configure with project preferences.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm init @eslint/config
+
+&lt;span class=&quot;c&quot;&gt;# Choose:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# To check syntax, find problems, and enforce code style&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# What type of modules does your project use? CommonJS (require/exports)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Which framework does your project use? None of these&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Does your project use TypeScript? No&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Where does your code run? Node&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Use a popular style guide Standard: https://github.com/standard/standard&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# What format do you want your config file to be in? JavaScript&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Which package manager do you want to use? npm&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Configure the rules of the eslint, edit the file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.eslintrc.js&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;For example, to add a rule to use 4 space identation to get the code more compact and in switch-case ident case &lt;a href=&quot;https://eslint.org/docs/latest/rules/indent#switchcase&quot;&gt;https://eslint.org/docs/latest/rules/indent#switchcase&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;na&quot;&gt;indent&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;error&apos;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;SwitchCase&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;}]&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;,&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Or use semicolons to make the code easier to read:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;na&quot;&gt;semi&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;error&apos;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;always&apos;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Add to the package.json file the eslint tests:&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;scripts&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;start&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./bin/www&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/mocha/bin/mocha&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-apis&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/mocha/bin/mocha ./test/api/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-routes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./bin/www &amp;amp; P1=$! &amp;amp;&amp;amp; sleep 2 &amp;amp;&amp;amp; node ./node_modules/mocha/bin/mocha ./test/routes/v1/ &amp;amp;&amp;amp; kill $P1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;test-eslint&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;node ./node_modules/.bin/eslint app.js bin/www api/*.js routes/*.js&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Analyze and correct the style of the javascript files&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;node ./node_modules/.bin/eslint app.js
+node ./node_modules/.bin/eslint app.js &lt;span class=&quot;nt&quot;&gt;--fix&lt;/span&gt;
+node ./node_modules/.bin/eslint bin/www &lt;span class=&quot;nt&quot;&gt;--fix&lt;/span&gt;
+node ./node_modules/.bin/eslint .eslintrc.js &lt;span class=&quot;nt&quot;&gt;--fix&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Deploy a service into GCP Cloud Run and secure with an API Key</title><link href="http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html" rel="alternate" type="text/html" title="Deploy a service into GCP Cloud Run and secure with an API Key" /><published>2023-08-05T09:40:12+02:00</published><updated>2023-08-05T09:40:12+02:00</updated><id>http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key</id><content type="html" xml:base="http://localhost:4000/operations/2023/08/05/deploy-a-service-in-cloud-run-with-api-key.html">&lt;p&gt;We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;images/google-apikey-cloudrun.png&quot; alt=&quot;API Gateway architecture overview&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Image from &lt;a href=&quot;https://cloud.google.com/api-gateway/docs/architecture-overview&quot;&gt;https://cloud.google.com/api-gateway/docs/architecture-overview&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;architecture-of-the-solution&quot;&gt;Architecture of the solution&lt;/h2&gt;
+
+&lt;p&gt;The components of the solution that we will use are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;A very simple web service with Node.js and deployed to GCP Cloud Run&lt;/li&gt;
+  &lt;li&gt;An API key to identify the caller&lt;/li&gt;
+  &lt;li&gt;A GCP service account to identify the API Gateway and the Cloud Run Service&lt;/li&gt;
+  &lt;li&gt;A GCP API Gateway&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;what-does-an-api-key&quot;&gt;What does an API Key?&lt;/h3&gt;
+
+&lt;p&gt;We will &lt;a href=&quot;https://cloud.google.com/endpoints/docs/openapi/when-why-api-key&quot;&gt;use an API KEY&lt;/a&gt; instead other metods because we only want to:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Block anonymous traffic&lt;/li&gt;
+  &lt;li&gt;Allows to control the number of calls made to our API&lt;/li&gt;
+  &lt;li&gt;Identify usage patterns in our API’s traffic&lt;/li&gt;
+  &lt;li&gt;Filter logs by API key&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;what-does-an-api-gateway-do&quot;&gt;What does an API Gateway do?&lt;/h3&gt;
+
+&lt;p&gt;An API Gateway is used primary to:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Validate atributes in the HTTP request&lt;/li&gt;
+  &lt;li&gt;Make a whitelist/blacklist abnd block requests&lt;/li&gt;
+  &lt;li&gt;Validate authentication/autorization talking to a identity provider&lt;/li&gt;
+  &lt;li&gt;Control rate limits, if its over the limit rejects the request&lt;/li&gt;
+  &lt;li&gt;Routing, finds the relevant service to route by path matching&lt;/li&gt;
+  &lt;li&gt;Service discovery&lt;/li&gt;
+  &lt;li&gt;Protocol conversion&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Other benefits of using API Gateways are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Error handling&lt;/li&gt;
+  &lt;li&gt;Circuit breaker&lt;/li&gt;
+  &lt;li&gt;Cache&lt;/li&gt;
+  &lt;li&gt;Monitoring and logging&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;build-the-web-service-to-deploy&quot;&gt;Build the web service to deploy&lt;/h2&gt;
+
+&lt;h3 id=&quot;develop-the-service-and-the-dockerfile&quot;&gt;Develop the service and the Dockerfile&lt;/h3&gt;
+
+&lt;p&gt;First of all, we have developed a very simple web service that exposes several APIs using Node.js.&lt;/p&gt;
+
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;http&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// A JSON array of products&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;products&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;./products.json&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;host&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;0.0.0.0&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;port&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;requestListener&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Received request to url:`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Content-Type&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;application/json&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;writeHead&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`{&quot;message&quot;: &quot;Internal server error &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;}`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chunk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chunk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Received request [&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;] &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Received request with headers:`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Received request with body data:`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Content-Type&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;application/json&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;/v1/products&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;writeHead&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;products&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;urlProductRegex&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sr&quot;&gt;/^&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\/&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\/&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;products&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\/[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;0-9&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;+/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;urlProductRegex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;idFound&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;substring&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;objectFound&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;products&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;idFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;objectFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;writeHead&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;objectFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;writeHead&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;404&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`{&quot;message&quot;: &quot;product with id &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;idFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; not found&quot;}`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// RESOURCE NOT FOUND&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;writeHead&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;404&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`{&quot;message&quot;: &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; not found&quot;}`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;server&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createServer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;requestListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;listen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;host&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Server is running on http://&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;host&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If we want to deploy this service into Cloud Run, we need to choose how to do it. Google Cloud provides us with several &lt;a href=&quot;https://cloud.google.com/run/docs/deploying&quot;&gt;options&lt;/a&gt;:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://cloud.google.com/run/docs/deploying&quot;&gt;Deploy container images&lt;/a&gt;: the idea is build a container image, push to a container registry (&lt;a href=&quot;https://cloud.google.com/artifact-registry/docs/overview&quot;&gt;Google Artifact Registry&lt;/a&gt; or &lt;a href=&quot;https://hub.docker.com/&quot;&gt;Docker Hub&lt;/a&gt;) and build the Cloud Run Service from the image pushed into the container registry&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build&quot;&gt;Continous deployment from git&lt;/a&gt;: the idea is link a git repository to Cloud Run and every time the master branch of the repository is updated automatically it deploys a new Cloud Run Service.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://cloud.google.com/run/docs/deploying-source-code&quot;&gt;Deploy from source code&lt;/a&gt;: Cloud Run supports several languages and allows to push a source code manually. This deployment method doesn’t require a Dockerfile.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;For our purpose, we choose the 2nd method: continuous deployment from GitHub. With this method, we will be able to deploy new versions by making commits to the branch we select in the GitHub repository, which will significantly speed up the deployment process. This approach is very useful not only during the development process but also in production for performing maintenance and fixing bugs.&lt;/p&gt;
+
+&lt;p&gt;To achieve this, we need a Dockerfile to create a container image and connect GitHub to Google Cloud.&lt;/p&gt;
+
+&lt;p&gt;To build a Dockerfile, we need to define several key points:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;The base image of the container: select the &lt;a href=&quot;https://hub.docker.com/search?q=&amp;amp;type=image&amp;amp;image_filter=official&quot;&gt;images&lt;/a&gt; that fit your project and has a small size as possible. We choose &lt;a href=&quot;https://hub.docker.com/_/node&quot;&gt;node alpine images&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;The port exposed by the container: Cloud Run exposes the port 8080 by default and we set this port to avoid extra &lt;a href=&quot;https://cloud.google.com/run/docs/configuring/services/containers&quot;&gt;configuration&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Our Dockerfile is:&lt;/p&gt;
+
+&lt;div class=&quot;language-Dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# pull official base image&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; node:20-alpine&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;LABEL&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; version=&quot;1.0&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# set working directory&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;COPY&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; . /app&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WORKDIR&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; /app&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Exposem el port de l&apos;aplicacio&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;EXPOSE&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; 8080&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Definim la comanda per executar l&apos;aplicacio&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CMD&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; [&quot;node&quot;, &quot;./index.js&quot;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;test-the-service-in-test-environment&quot;&gt;Test the service in test environment&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Create and tag the docker image&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker build &lt;span class=&quot;nt&quot;&gt;--tag&lt;/span&gt; codebiting/g2l-test-server:v1 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Run the docker in test&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 8080:8080 &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; codebiting/g2l-test-server:v1
+
+&lt;span class=&quot;c&quot;&gt;# Check that the docker is running&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker ps
+
+&lt;span class=&quot;c&quot;&gt;# Inspect the docker logs&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker logs &amp;lt;container_id&amp;gt;
+
+&lt;span class=&quot;c&quot;&gt;# Check that from inside the docker can access the app&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &amp;lt;container_id&amp;gt; sh &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;wget http://localhost:8080&apos;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Get docker info to search &quot;IPAddress&quot; for the docker IP.&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker inspect &amp;lt;container_id&amp;gt;
+
+&lt;span class=&quot;c&quot;&gt;# Test with a browser the docker&lt;/span&gt;
+curl http://&amp;lt;IPAddress&amp;gt;:8080
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;deploy-the-service-to-cloud-run&quot;&gt;Deploy the service to Cloud Run&lt;/h2&gt;
+
+&lt;p&gt;See &lt;a href=&quot;https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build&quot;&gt;https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;create-a-new-google-cloud-project-to-aisle-billing-from-other-projects&quot;&gt;Create a new Google Cloud project to aisle billing from other projects&lt;/h3&gt;
+
+&lt;p&gt;In order to isolate the project and its associated costs we will create a new Google Cloud project.
+Go to &lt;a href=&quot;https://console.cloud.google.com/projectcreate&quot;&gt;IAM and admin -&amp;gt; Create a project&lt;/a&gt; and create a new project.&lt;/p&gt;
+
+&lt;p&gt;Enable Google Cloud APIs:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Cloud Source Repositories API&lt;/li&gt;
+  &lt;li&gt;Cloud Build API&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;setting-up-continuous-deployment-from-the-cloud-run-user-interface&quot;&gt;Setting up continuous deployment from the Cloud Run user interface&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Go to &lt;a href=&quot;https://console.cloud.google.com/run&quot;&gt;Cloud Run Console&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Create a new service
+    &lt;ol&gt;
+      &lt;li&gt;Select “Continuously deploy new revisions from a source repository”&lt;/li&gt;
+      &lt;li&gt;Set the &lt;a href=&quot;https://cloud.google.com/run/docs/configuring/max-instances&quot;&gt;maximum number of instances&lt;/a&gt; running concurrently in the auto-scaling section to limit costs.&lt;/li&gt;
+      &lt;li&gt;In the Service settings page, click Set up with Cloud Build
+        &lt;ol&gt;
+          &lt;li&gt;Select the provider and the repositor: GitHub in our case&lt;/li&gt;
+          &lt;li&gt;Select the repository to deploy from GitHub&lt;/li&gt;
+          &lt;li&gt;Select the branch&lt;/li&gt;
+          &lt;li&gt;Select the built type: in our case Dockerfile&lt;/li&gt;
+          &lt;li&gt;Save and Create&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Set the service name&lt;/li&gt;
+  &lt;li&gt;Set the region&lt;/li&gt;
+  &lt;li&gt;Select the CPU allocation and pricing, in our case “CPU is only allocated during request processing”&lt;/li&gt;
+  &lt;li&gt;Set the auto-scaling&lt;/li&gt;
+  &lt;li&gt;Set the ingress control, in our case “All”&lt;/li&gt;
+  &lt;li&gt;Set the authentication, in our case “Require authentication”&lt;/li&gt;
+  &lt;li&gt;Create&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;create-a-service-account-to-allow-access-to-the-service&quot;&gt;Create a service account to allow access to the service&lt;/h2&gt;
+
+&lt;p&gt;To be able to access the service deployed on Cloud Run, we will create a service account with the minimum permissions required to make calls to the service. API Gateway will then use this service account to access the service.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Go to &lt;a href=&quot;https://cloud.google.com/run/docs/authenticating/service-to-service&quot;&gt;IAM and admin -&amp;gt; Service accounts&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Create service account&lt;/li&gt;
+  &lt;li&gt;Set a service account name: note that the service account id and the email address are created automatically from the name&lt;/li&gt;
+  &lt;li&gt;Set a role: to invoke a cloud run service its needed the role “Cloud Run Invoker”&lt;/li&gt;
+  &lt;li&gt;Create&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;create-an-api-gateway-with-apy-key-authentication&quot;&gt;Create an API Gateway with APY KEY authentication&lt;/h2&gt;
+
+&lt;h3 id=&quot;create-a-openapi-2-definition-in-yaml-format-for-the-api-specifiying-an-api-key-to-authenticate-the-calls&quot;&gt;Create a OpenApi 2 definition in yaml format for the API specifiying an API-KEY to authenticate the calls&lt;/h3&gt;
+
+&lt;p&gt;This yaml file must have the following requirements:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;The title must have an API_ID followed by a description. The value of the title field is used when minting API keys that grant access to this API. See API ID requirements for API naming guidelines.&lt;/li&gt;
+  &lt;li&gt;Set the address for each call: this address is made by the Cloud Run Service URL (it can find inside Cloud Run, in service details)&lt;/li&gt;
+  &lt;li&gt;Into the securityDefinitions section set &lt;a href=&quot;https://swagger.io/docs/specification/2-0/authentication/api-keys/&quot;&gt;where the API KEY must be provided&lt;/a&gt;, in the URL “query” or into the “header”&lt;/li&gt;
+  &lt;li&gt;Verify the &lt;a href=&quot;https://cloud.google.com/endpoints/docs/openapi/openapi-limitations#api_key_definition_limitations&quot;&gt;API Key definition limitations&lt;/a&gt; to set the api key name.&lt;/li&gt;
+  &lt;li&gt;Set the &lt;a href=&quot;https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation&quot;&gt;path translation strategy&lt;/a&gt; used by google.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;swagger&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2.0&apos;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;backend-apigateway-secure-v1 G2L Integration API&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;description&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;G2L Integration API on API Gateway with a Google Cloud Run Backend&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1.0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;schemes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;https&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;produces&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;application/json&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;paths&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;/v1/products&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;summary&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Greet all the products&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;operationId&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;GetProducts&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;x-google-backend&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;https://g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;path_translation&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;APPEND_PATH_TO_ADDRESS&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;security&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;api_key&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[]&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;responses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;200&apos;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;na&quot;&gt;description&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;A successful response&lt;/span&gt;
+          &lt;span class=&quot;na&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;securityDefinitions&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# This section configures basic authentication with an API key.&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;api_key&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;apiKey&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;x-api-key&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;header&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;create-an-api-key&quot;&gt;Create an API Key&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Go to &lt;a href=&quot;https://console.cloud.google.com/apis/credentials&quot;&gt;API and services -&amp;gt; Credentials&lt;/a&gt; and &lt;a href=&quot;https://cloud.google.com/docs/authentication/api-keys#creating_an_api_key&quot;&gt;create an API Key&lt;/a&gt;, by default the API can call any enabled API and has no restrictions.&lt;/li&gt;
+  &lt;li&gt;Restrit to “API Gateway API”&lt;/li&gt;
+  &lt;li&gt;Copy the key to use when calling the API&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;create-the-api-gateway&quot;&gt;Create the API Gateway&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Go to &lt;a href=&quot;https://console.cloud.google.com/api-gateway/api&quot;&gt;API gateway&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Create an API Gateway
+    &lt;ol&gt;
+      &lt;li&gt;API Name: set a descriptive name, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;G2L Integration API&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;API ID: set the API ID, set the same id as the title of the OpenAPI 2 yaml specification, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;backend-apigateway-secure-v1&lt;/code&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Setup the API config
+    &lt;ol&gt;
+      &lt;li&gt;Upload the OpenApi 2 spec in yaml format&lt;/li&gt;
+      &lt;li&gt;API config name, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;G2L integration config&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;Select a service account with permissions to invoke Cloud Run services&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Setup Gateway details:
+    &lt;ol&gt;
+      &lt;li&gt;Gateway name, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;G2L Integration Gateway&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;Select the region, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;europe-west1&lt;/code&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Create the API gateway&lt;/li&gt;
+  &lt;li&gt;Wait until the creation is finished, can last several minutes&lt;/li&gt;
+  &lt;li&gt;Click in the API Gateway to see the details, in “Gateways” tab, copy the external URL generated by Google, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Copy the managed service name so secure the API with a key, ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g2l-integration-api-v1-xxxxxxxxxxx.apigateway.g2l-integration.cloud.goog&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Enable the managed service:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Go to &lt;a href=&quot;https://console.cloud.google.com/apis/dashboard&quot;&gt;APIs and services -&amp;gt; Enabled APIs and services&lt;/a&gt;, search by the Cloud Run Service managed service name, and enable it. it can be enabled with the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gcloud services enable g2l-integration-api-v1-xxxxxxxxxxx.apigateway.g2l-integration.cloud.goog&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;test-the-service&quot;&gt;Test the service&lt;/h2&gt;
+
+&lt;p&gt;Try to acces the Cloud Run Service directly, it will fail becaouse we need an authentication:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl https://g2l-test-server-xxxxxxxxxxx-eu.a.run.app/v1/products
+
+&amp;lt;html&amp;gt;&amp;lt;&lt;span class=&quot;nb&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&amp;lt;meta http-equiv&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;content-type&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;text/html;charset=utf-8&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&amp;lt;title&amp;gt;403 Forbidden&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body &lt;span class=&quot;nv&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#000000 bgcolor=#ffffff&amp;gt;&lt;/span&gt;
+&amp;lt;h1&amp;gt;Error: Forbidden&amp;lt;/h1&amp;gt;
+&amp;lt;h2&amp;gt;Your client does not have permission to get URL &amp;lt;code&amp;gt;/&amp;lt;/code&amp;gt; from this server.&amp;lt;/h2&amp;gt;
+&amp;lt;h2&amp;gt;&amp;lt;/h2&amp;gt;
+&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Try to access the Cloud Run Service directly with an Oauth2 token, it will succeed because we use OAuth authentication:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Configure the project and region&lt;/span&gt;
+gcloud config &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;project g2l-integration
+gcloud config &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;run/region europe
+
+&lt;span class=&quot;c&quot;&gt;# Login with a user with privileges to execute the service &lt;/span&gt;
+gcloud auth login
+
+&lt;span class=&quot;c&quot;&gt;# Generate the token&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;TOKEN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;gcloud auth print-identity-token&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Call the service with the token&lt;/span&gt;
+curl &lt;span class=&quot;nt&quot;&gt;-H&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Authorization: Bearer &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$TOKEN&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-H&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type: text/plain&apos;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;**Hello Bold Text**&apos;&lt;/span&gt; https://onion-g2l-test-server-xxxxxxxxxxx-ew.a.run.app/v1/products
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; ... &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Try to access the service through the API Gateway the API with no authentication (without key in header o query), it will return an error:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;code&quot;&lt;/span&gt;:401,&lt;span class=&quot;s2&quot;&gt;&quot;message&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;UNAUTHENTICATED:Method doesn&apos;t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Try to access the API with the API key support disabled, it will return an error:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;--location&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--request&lt;/span&gt; GET &lt;span class=&quot;s1&quot;&gt;&apos;https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products&apos;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type: application/json&apos;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;x-api-key: KKKKKKKKKKKKKKKKKKKKKKKK&apos;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;message&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;UNAUTHENTICATED:Method doesn&apos;t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;code&quot;&lt;/span&gt;:401&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Try to access the API with a wrong key, it will return an error:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;--location&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--request&lt;/span&gt; GET &lt;span class=&quot;s1&quot;&gt;&apos;https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products&apos;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type: application/json&apos;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;x-api-key: EEEEEEEEEEEEEEEEEEEEE&apos;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;code&quot;&lt;/span&gt;:400,&lt;span class=&quot;s2&quot;&gt;&quot;message&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;INVALID_ARGUMENT:API key not valid. Please pass a valid API key.&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Try to access with the correct key:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;--location&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--request&lt;/span&gt; GET &lt;span class=&quot;s1&quot;&gt;&apos;https://g2l-integration-gateway-xxxxxxxxxxx.ew.gateway.dev/v1/products&apos;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type: application/json&apos;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--header&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;x-api-key: KKKKKKKKKKKKKKKKKKKKKKKK&apos;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; ... &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;next-steps&quot;&gt;Next steps&lt;/h2&gt;
+
+&lt;p&gt;Now that we have a service that can be called through an API Gateway, it’s time to enhance security and analyze the logs.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that API KEY authentication is vulnerable to a man-in-the-middle attack. To reduce this vulnerability, use OAuth2 authentication&lt;/p&gt;
+
+&lt;p&gt;To grant more security &lt;a href=&quot;https://cloud.google.com/docs/authentication/api-keys#creating_an_api_key&quot;&gt;secure the APY key with restrictions&lt;/a&gt;&lt;/p&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="operations" /><summary type="html">We will learn how to implement a web service made with Node.js as a Cloud Run service and provide access to the server with an API gateway with an API key.</summary></entry><entry><title type="html">MySQL Deadlocks Analysis - Part I - Isolation Levels</title><link href="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-i.html" rel="alternate" type="text/html" title="MySQL Deadlocks Analysis - Part I - Isolation Levels" /><published>2023-07-12T13:35:24+02:00</published><updated>2023-07-12T13:35:24+02:00</updated><id>http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-i</id><content type="html" xml:base="http://localhost:4000/development/2023/07/12/mysql-deadlocks-analysis-i.html">&lt;p&gt;When working with relational databases, deadlock issues are a common problem, especially when the application has not addressed these issues correctly from the beginning. In this post, we will try to provide a first understanding of how to address these problems and offer some techniques to minimize them.&lt;/p&gt;
+
+&lt;p&gt;There are one concept that must be clear before we start: isolation&lt;/p&gt;
 
 &lt;h2 id=&quot;isolation&quot;&gt;Isolation&lt;/h2&gt;
 
@@ -114,119 +705,170 @@ access_mode: {
 &lt;ul&gt;
   &lt;li&gt;Create indexes for the columns that are used as filters in the SQL queries.&lt;/li&gt;
   &lt;li&gt;Break large batch inserts into smaller ones to shorten lock occupancy.&lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;When multiple rows are updated in different transactions, make sure they are updated in the same order.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Our idea proposed to prevent deadlock:&lt;/p&gt;
+  &lt;li&gt;When multiple rows are updated in different transactions, make sure they are updated in the same order.&lt;/li&gt;
+&lt;/ul&gt;
 
-    &lt;ul&gt;
-      &lt;li&gt;
-        &lt;p&gt;Container table exaple:&lt;/p&gt;
+&lt;p&gt;Our idea proposed to prevent deadlock:&lt;/p&gt;
 
-        &lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;BIGINT&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;UNSIGNED&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AUTO_INCREMENT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;clientId&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;BIGINT&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;UNSIGNED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;VARCHAR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;--Default Version 0&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;version&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;description&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;TEXT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;width&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;height&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;maxWeight&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;KEY&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;UNIQUE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;KEY&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ENGINE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;INNODB&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-        &lt;p&gt;Example data for the table:&lt;/p&gt;
+&lt;p&gt;Container table example:&lt;/p&gt;
 
-        &lt;table&gt;
-          &lt;thead&gt;
-            &lt;tr&gt;
-              &lt;th&gt;id&lt;/th&gt;
-              &lt;th&gt;clientId&lt;/th&gt;
-              &lt;th&gt;code&lt;/th&gt;
-              &lt;th&gt;version&lt;/th&gt;
-              &lt;th&gt;description&lt;/th&gt;
-              &lt;th&gt;width&lt;/th&gt;
-              &lt;th&gt;length&lt;/th&gt;
-              &lt;th&gt;height&lt;/th&gt;
-              &lt;th&gt;maxWeight&lt;/th&gt;
-            &lt;/tr&gt;
-          &lt;/thead&gt;
-          &lt;tbody&gt;
-            &lt;tr&gt;
-              &lt;td&gt;1&lt;/td&gt;
-              &lt;td&gt;1&lt;/td&gt;
-              &lt;td&gt;CONT01&lt;/td&gt;
-              &lt;td&gt;0&lt;/td&gt;
-              &lt;td&gt;TEST&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;20&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;200&lt;/td&gt;
-            &lt;/tr&gt;
-            &lt;tr&gt;
-              &lt;td&gt;2&lt;/td&gt;
-              &lt;td&gt;1&lt;/td&gt;
-              &lt;td&gt;CONT02&lt;/td&gt;
-              &lt;td&gt;0&lt;/td&gt;
-              &lt;td&gt;TEST&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;20&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;200&lt;/td&gt;
-            &lt;/tr&gt;
-            &lt;tr&gt;
-              &lt;td&gt;3&lt;/td&gt;
-              &lt;td&gt;2&lt;/td&gt;
-              &lt;td&gt;CONT03&lt;/td&gt;
-              &lt;td&gt;0&lt;/td&gt;
-              &lt;td&gt;TEST&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;20&lt;/td&gt;
-              &lt;td&gt;10&lt;/td&gt;
-              &lt;td&gt;200&lt;/td&gt;
-            &lt;/tr&gt;
-          &lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-        &lt;p&gt;&lt;strong&gt;Client1&lt;/strong&gt; access to the containers with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[get]/containers&lt;/code&gt; and then updates one container:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;```sql
+CREATE TABLE container (
+  id BIGINT UNSIGNED AUTO_INCREMENT,
+  clientId BIGINT UNSIGNED NOT NULL,
+  code VARCHAR(50) NOT NULL,
+  --Default Version 0
+  version INT 0,
+  description TEXT NULL,
+  width INT NULL,
+  length INT NULL,
+  height INT NULL,
+  maxWeight INT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY (code),
+) ENGINE=INNODB;
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-        &lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- CLIENT1 gets the containers data at the same time that CLIENT2.&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+&lt;p&gt;Example data for the table:&lt;/p&gt;
 
-        &lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; 
-&lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;CONT01-A&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; 
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;-- Now the version will be 1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
-      &lt;/li&gt;
-      &lt;li&gt;
-        &lt;p&gt;&lt;strong&gt;Client2&lt;/strong&gt; access to the containers with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[get]/containers&lt;/code&gt; and then updates one container after the &lt;strong&gt;Client1&lt;/strong&gt; updated the container:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;```text
+| id | clientId | code | version | description | width | length | height | maxWeight |
+|----|----------|------|---------|-------------|-------|--------|--------|-----------|
+| 1 | 1 | CONT01 | 0 | TEST | 10 | 20 | 10 | 200 |
+| 2 | 1 | CONT02 | 0 | TEST | 10 | 20 | 10 | 200 |
+| 3 | 2 | CONT03 | 0 | TEST | 10 | 20 | 10 | 200 |
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-        &lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- CLIENT2 gets the containers data at the same time that CLIENT1.&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Client1&lt;/strong&gt; access to the containers with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[get]/containers&lt;/code&gt; and then updates one container:&lt;/p&gt;
 
-        &lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- CLIENT2 has to wait till CLIENT1 updates the CONTAINER&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; 
-&lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;CONT01-B&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; 
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;-- Now the version will be 2&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="development" /><summary type="html">Learn how deadlocks works in .</summary></entry><entry><title type="html">Create a professional web service - Part III - Documentation</title><link href="http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iii.html" rel="alternate" type="text/html" title="Create a professional web service - Part III - Documentation" /><published>2023-07-10T17:48:24+02:00</published><updated>2023-07-10T17:48:24+02:00</updated><id>http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iii</id><content type="html" xml:base="http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iii.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;```sql
+BEGIN; -- CLIENT1 gets the containers data at the same time that CLIENT2.
+SELECT * FROM container
+WHERE id=2;
+```
+
+```sql
+BEGIN;
+UPDATE container 
+SET code=&apos;CONT01-A&apos;, version=version+1 
+WHERE id=2 AND version=0;
+-- Now the version will be 1
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Client2&lt;/strong&gt; access to the containers with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[get]/containers&lt;/code&gt; and then updates one container after the &lt;strong&gt;Client1&lt;/strong&gt; updated the container:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;```sql
+BEGIN; -- CLIENT2 gets the containers data at the same time that CLIENT1.
+SELECT * FROM container
+WHERE id=2;
+```
+
+```sql
+BEGIN; -- CLIENT2 has to wait till CLIENT1 updates the CONTAINER
+UPDATE container 
+SET code=&apos;CONT01-B&apos;, version=version+1 
+WHERE id=2 AND version=1;
+-- Now the version will be 2
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Marc Arcedo</name></author><category term="development" /><summary type="html">When working with relational databases, deadlock issues are a common problem, especially when the application has not addressed these issues correctly from the beginning. In this post, we will try to provide a first understanding of how to address these problems and offer some techniques to minimize them.</summary></entry><entry><title type="html">Create a professional web service - Part IV - HATEOAS</title><link href="http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iV.html" rel="alternate" type="text/html" title="Create a professional web service - Part IV - HATEOAS" /><published>2023-07-10T17:48:24+02:00</published><updated>2023-07-10T17:48:24+02:00</updated><id>http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iV</id><content type="html" xml:base="http://localhost:4000/development/2023/07/10/create-a-professional-web-service-iV.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+
+&lt;h2 id=&quot;hateoas&quot;&gt;HATEOAS&lt;/h2&gt;
+
+&lt;p&gt;Hypermedia as the Engine of Application State (HATEOAS) is a category within the REST architectural style that involves replacing parts of the information represented by links. This allows the application that downloads the information to handle the structure of this information without prior knowledge and treat it later.&lt;/p&gt;
+
+&lt;p&gt;HATEOAS can be used to provide intelligence to the client, enabling it to make other calls from a single call.&lt;/p&gt;
+
+&lt;p&gt;There is no absolute standard for how to represent hypermedia controls.&lt;/p&gt;
+
+&lt;p&gt;To help explain the specific properties of a web-style system and identify where HATEOAS fits, we can use the &lt;a href=&quot;http://www.crummy.com/&quot;&gt;Leonard Richardson&lt;/a&gt; four level &lt;a href=&quot;https://martinfowler.com/articles/richardsonMaturityModel.html&quot;&gt;model of restful maturity&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;level-0-http-as-a-transport-system-for-remote-interactions&quot;&gt;Level 0, HTTP as a transport system for remote interactions&lt;/h3&gt;
+
+&lt;p&gt;The starting point for the model is using HTTP as a way to communicate remotely, but without using fully the features of the web. Instead, it uses HTTP like a tunnel to create its own remote interaction mechanism, often relying on Remote Procedure Invocation.&lt;/p&gt;
+
+&lt;p&gt;For example, a level 0 API uses verbs in the URLs (a bad practice for REST):&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;/addContainer&lt;/li&gt;
+  &lt;li&gt;/deleteContainer&lt;/li&gt;
+  &lt;li&gt;/getClients&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;level-1-resources&quot;&gt;Level 1, resources&lt;/h3&gt;
+
+&lt;p&gt;The second level for the model considers the elements of the API as resources. Each one has its own endpoint, and the URLs do not end with a slash ‘/’. The slash is used only to set a hierarchy between resources.&lt;/p&gt;
+
+&lt;p&gt;For example, the endpoints at this level use resource names instead of verbs or something else:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;/container&lt;/li&gt;
+  &lt;li&gt;/client&lt;/li&gt;
+  &lt;li&gt;/register&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;level-2-verbs&quot;&gt;Level 2, verbs&lt;/h3&gt;
+
+&lt;p&gt;The third level for the model is when the API uses the &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods&quot;&gt;verbs&lt;/a&gt;, &lt;a href=&quot;https://en.wikipedia.org/wiki/URL&quot;&gt;parameters of the URL and the query parameters&lt;/a&gt;, &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/HTTP/Status&quot;&gt;HTTP status codes&lt;/a&gt; for the results, and &lt;a href=&quot;https://en.wikipedia.org/wiki/List_of_HTTP_header_fields&quot;&gt;headers&lt;/a&gt;, used as metadata with different pourpose.&lt;/p&gt;
+
+&lt;p&gt;For example, the endpoints of this level are like:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;[GET]/container?clientId=1234&lt;/li&gt;
+  &lt;li&gt;[DELETE]/container/1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;level-3-hypermedia-controls&quot;&gt;Level 3, hypermedia controls&lt;/h3&gt;
+
+&lt;p&gt;This level is divided into two aspects, content negotiation and resource link discovery.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Content negotiation&lt;/strong&gt; allows the client to specify the format of the data in which it wants the result. It is requested with the Accept header in the request. For example, a REST service client that wants the data in JSON format must provide an Accept: application/json header and if it wants it in XML format an Accept: application/xml header. In case of sending data in the request body, the format of the data provided is specified with the Content-Type header. In case the service does not support the provided data type or is not capable of providing the requested format, it returns the status code 415 indicating unsupported data type format.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Resource link or HATEOAS&lt;/strong&gt; is the principle that applies links in the data of the entities that allows to navigate between them and discover the available actions, a client of a REST service that implements HATEOAS does not need to know the URLs to interact with the different actions, these are returned in the response data as metadata.&lt;/p&gt;
+
+&lt;p&gt;For example, a response with HATEOAS can be like:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+curl &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; http://localhost:8080/product/1
+
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;productId&quot;&lt;/span&gt;: 1,
+  &lt;span class=&quot;s2&quot;&gt;&quot;productName&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;product 1&quot;&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&quot;links&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&quot;href&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;1/stocks&quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&quot;rel&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;products&quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&quot;type&quot;&lt;/span&gt; : &lt;span class=&quot;s2&quot;&gt;&quot;GET&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;swagger-and-hateoas&quot;&gt;Swagger and HATEOAS&lt;/h2&gt;
+
+&lt;p&gt;Swagger allows you to document a REST service and includes support for documenting a service that complies with the HATEOAS hypermedia principle. Swagger provides several annotations that are included in the service interface. When processing these annotations, it generates a schema of the service interface with OpenAPI, which is then used to generate documentation including the endpoints, arguments, verbs, response codes, and model data.&lt;/p&gt;
+
+&lt;p&gt;Swagger also allows you to call services and obtain the curl command to make the request from the command line.&lt;/p&gt;
+
+&lt;h2 id=&quot;advantages-and-problems&quot;&gt;Advantages and problems&lt;/h2&gt;
+
+&lt;p&gt;With HATEOAS, clients do not construct URLs of resources to make requests; instead, they obtain the URLs from the response data. At the same time, the response specifies the possible actions, so the client does not need to implement logic to determine if an operation is possible. The application also does not need to construct URLs with string interpolation to include an entity identifier; the full link is returned in the data. This approach allows clients to avoid implementing this logic and reduces the risk of the server and client’s possible operations logic getting out of sync.&lt;/p&gt;
+
+&lt;p&gt;On the downside, HATEOAS adds complexity to the API, which affects both the API developer and the API consumer. Additional work needs to be done to add the appropriate links in each response based on the state of the entity. This makes building the API more complex compared to an API that does not implement HATEOAS.&lt;/p&gt;
+
+&lt;p&gt;API clients also face added complexity in understanding the semantics of each binding and processing each response to get the bindings. While the benefits of HATEOAS may outweigh this added complexity, it must be taken into account.&lt;/p&gt;
+
+&lt;p&gt;If the API is public, there is a possibility that some clients might misuse it and not utilize hypermedia, rendering HATEOAS useless in such cases&lt;/p&gt;
+
+&lt;h2 id=&quot;useful-links&quot;&gt;Useful links&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://martinfowler.com/articles/richardsonMaturityModel.html&quot;&gt;https://martinfowler.com/articles/richardsonMaturityModel.html&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://picodotdev.github.io/blog-bitix/2021/07/los-niveles-de-madurez-rest-ejemplo-con-hateoas-y-documentacion-con-swagger-de-un-servicio-con-spring-boot/&quot;&gt;https://picodotdev.github.io/blog-bitix/2021/07/los-niveles-de-madurez-rest-ejemplo-con-hateoas-y-documentacion-con-swagger-de-un-servicio-con-spring-boot/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.npmjs.com/package/express-hateoas-links&quot;&gt;https://www.npmjs.com/package/express-hateoas-links&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part III - Documentation</title><link href="http://localhost:4000/development/2023/07/09/create-a-professional-web-service-iii.html" rel="alternate" type="text/html" title="Create a professional web service - Part III - Documentation" /><published>2023-07-09T17:48:24+02:00</published><updated>2023-07-09T17:48:24+02:00</updated><id>http://localhost:4000/development/2023/07/09/create-a-professional-web-service-iii</id><content type="html" xml:base="http://localhost:4000/development/2023/07/09/create-a-professional-web-service-iii.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
 
 &lt;h2 id=&quot;document-the-api&quot;&gt;Document the API&lt;/h2&gt;
 
@@ -405,7 +1047,7 @@ access_mode: {
 &lt;strong&gt;HATEOAS&lt;/strong&gt; can be used to provide intelligence to the client, allowing it to make other calls from a single call.&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;Errors&lt;/strong&gt; should be managed consistently, and centralizing errors in one JSON array might be a good idea (see &lt;a href=&quot;https://www.rfc-editor.org/rfc/rfc7807&quot;&gt;https://www.rfc-editor.org/rfc/rfc7807&lt;/a&gt; for more information).&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;For API versioning&lt;/strong&gt;, choose the versioning approach that best suits your needs. For example, you can refer to &lt;a href=&quot;https://semver.org/&quot;&gt;https://semver.org/&lt;/a&gt; for guidance.&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part II - Logging</title><link href="http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html" rel="alternate" type="text/html" title="Create a professional web service - Part II - Logging" /><published>2023-07-07T07:55:56+02:00</published><updated>2023-07-07T07:55:56+02:00</updated><id>http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii</id><content type="html" xml:base="http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+&lt;/ul&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part II - Logging</title><link href="http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html" rel="alternate" type="text/html" title="Create a professional web service - Part II - Logging" /><published>2023-07-07T07:55:56+02:00</published><updated>2023-07-07T07:55:56+02:00</updated><id>http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii</id><content type="html" xml:base="http://localhost:4000/development/2023/07/07/create-a-professional-web-service-ii.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
 
 &lt;h2 id=&quot;adding-logging-capabilities&quot;&gt;Adding logging capabilities&lt;/h2&gt;
 
@@ -550,11 +1192,15 @@ npm &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;winston &lt;span class
 &lt;span class=&quot;nx&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;This is a debug log&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;To test this changes start the service in development mode &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;npm start&lt;/code&gt; and then in production mode &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NODE_ENV=production npm start&lt;/code&gt;&lt;/p&gt;</content><author><name></name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part I - Server skeleton</title><link href="http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html" rel="alternate" type="text/html" title="Create a professional web service - Part I - Server skeleton" /><published>2023-07-06T09:58:12+02:00</published><updated>2023-07-06T09:58:12+02:00</updated><id>http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i</id><content type="html" xml:base="http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+&lt;p&gt;To test this changes start the service in development mode &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;npm start&lt;/code&gt; and then in production mode &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NODE_ENV=production npm start&lt;/code&gt;&lt;/p&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry><entry><title type="html">Create a professional web service - Part I - Server skeleton</title><link href="http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html" rel="alternate" type="text/html" title="Create a professional web service - Part I - Server skeleton" /><published>2023-07-06T09:58:12+02:00</published><updated>2023-07-06T09:58:12+02:00</updated><id>http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i</id><content type="html" xml:base="http://localhost:4000/development/2023/07/06/create-a-professional-web-service-i.html">&lt;p&gt;Learn how to build a profesional web service with JavaScript, NodeJS and Express.&lt;/p&gt;
+
+&lt;p&gt;Creating a professional web service has become more than just a technological endeavor—it’s an art. Enter Node.js and Express.js, the dynamic duo that empowers developers to sculpt robust and performant web services while harnessing the prowess of the Linux operating system for hosting. If you’re eager to learn the ropes of building and deploying a top-tier web service, you’re in the right place.&lt;/p&gt;
+
+&lt;p&gt;This blog post embarks on a journey through the intricacies of crafting a professional web service using Node.js and Express.js, with a focus on deploying it on a Linux web server.&lt;/p&gt;
 
 &lt;h2 id=&quot;build-a-simple-web-server&quot;&gt;Build a simple web server&lt;/h2&gt;
 
-&lt;p&gt;To build a professional web service with JavaScript, Node.js, and Express, you need to follow a series of steps. Let’s start with installing Node.js, npm, and Express on Ubuntu 22.04 LTS. Here’s a corrected version of the instructions:&lt;/p&gt;
+&lt;p&gt;Let’s start with installing Node.js, npm, and Express on Ubuntu 22.04 LTS.&lt;/p&gt;
 
 &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-o-&lt;/span&gt; https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NVM_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/.nvm&quot;&lt;/span&gt;
@@ -673,4 +1319,4 @@ npm start
   &lt;li&gt;Consistent error handling&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;We will cover these topics in the upcoming posts.&lt;/p&gt;</content><author><name></name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry></feed>
+&lt;p&gt;We will cover these topics in the upcoming posts.&lt;/p&gt;</content><author><name>Jordi Dalmau Heras</name></author><category term="development" /><summary type="html">Learn how to build a profesional web service with JavaScript, NodeJS and Express.</summary></entry></feed>
